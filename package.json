@@ -1,0 +1,13 @@
+{
+  "name"         : "censor.watch",
+  "version"      : "0.0.1",
+  "description"  : "censor.watch website for Satellite visualizations",
+  "main"         : "server.js",
+  "author"       : "Luke Neilson",
+  "repository"   : "git://github.com/UWNetworksLab/censor.watch.git",
+  "dependencies" : {
+      "express"    : "~4.13.0",
+      "body-parser": "~1.13.1",
+      "morgan": "1.6.0"
+    }
+}
