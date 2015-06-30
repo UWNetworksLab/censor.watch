@@ -61,72 +61,59 @@
     </div>
 
 
-    <div class="container">
+    <div class="container" id="intro-header" style="margin-top: 4em;">
 
-		<div class="page-header" id="banner">
-			<!--
-			<div class="row">
-			  <div class="col-lg-8 col-md-7 col-sm-6">
-				<h1>Darkly</h1>
-				<p class="lead">Flatly in night mode</p>
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="page-header">
+				<h1 id="type" style="font-size: 4em;">Spheres of Influence</h1>
+				<h2>Click a country to visualize its IP Addresses</h2>
+			</div>
+		</div>
+	</div>
+
+	<div class="bs-component">
+		<nav class="navbar navbar-default">
+		<div class="container-fluid">
+
+		  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+			  <li class="active"><a href="#">Filter 1 <span class="sr-only">(current)</span></a></li>
+			  <li><a href="#">Filter 2</a></li>
+			  <li class="dropdown">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More Options <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+				  <li><a href="#">Action</a></li>
+				  <li><a href="#">Another action</a></li>
+				  <li><a href="#">Something else here</a></li>
+				  <li class="divider"></li>
+				  <li><a href="#">Separated link</a></li>
+				  <li class="divider"></li>
+				  <li><a href="#">One more separated link</a></li>
+				</ul>
+			  </li>
+			</ul>
+			<form class="navbar-form navbar-left" role="search">
+			  <div class="form-group">
+				<select id="mapDropdown" class="ui-widget combobox"></select>
 			  </div>
-			</div>
-			-->
+			</form>
+			<ul class="nav navbar-nav navbar-right">
+			  <li><a href="#">Generate Link</a></li>
+			</ul>
+		  </div>
 		</div>
-
-		<div class ="bs-component">
-			<div class="jumbotron">
-				<div class="row">
-					<div class="col-lg-8 col-md-7 col-sm-6">
-						<h1 style="margin-top: -10px;">Spheres of Influence</h1>
-						<p class="lead">Click a country to visualize its IP Addresses</p>
-					</div>
-				</div>
-				<div class="bs-component">
-					<nav class="navbar navbar-default">
-					<div class="container-fluid">
-
-					  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-						<ul class="nav navbar-nav">
-						  <li class="active"><a href="#">Filter 1 <span class="sr-only">(current)</span></a></li>
-						  <li><a href="#">Filter 2</a></li>
-						  <li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More Options <span class="caret"></span></a>
-							<ul class="dropdown-menu" role="menu">
-							  <li><a href="#">Action</a></li>
-							  <li><a href="#">Another action</a></li>
-							  <li><a href="#">Something else here</a></li>
-							  <li class="divider"></li>
-							  <li><a href="#">Separated link</a></li>
-							  <li class="divider"></li>
-							  <li><a href="#">One more separated link</a></li>
-							</ul>
-						  </li>
-						</ul>
-						<form class="navbar-form navbar-left" role="search">
-						  <div class="form-group">
-							<select id="mapDropdown" class="ui-widget combobox"></select>
-						  </div>
-						</form>
-						<ul class="nav navbar-nav navbar-right">
-						  <li><a href="#">Generate Link</a></li>
-						</ul>
-					  </div>
-					</div>
-					</nav>
-					<div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div>
-				</div>
-				
-				<!-- Highmaps -->
-				<div id="demo-wrapper">
-					<div id="mapBox">
-						<div id="up"></div>
-						<div id="container"></div> 
-					</div>
-				</div>
-			</div>
+		</nav>
+		<div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div>
+	</div>
+	
+	<!-- Highmaps -->
+	<div id="demo-wrapper">
+		<div id="mapBox">
+			<div id="up"></div>
+			<div id="container"></div> 
 		</div>
-
+	</div>
     </div>
 	
 	<!-- Highmaps -->
@@ -388,20 +375,30 @@
 			}
 			$('#mapDropdown').change();
 		});
+
+		Highcharts.theme = {
+		   colors: ["#2C3E50", "#18BC9C", "#798D8F", "#217DBB", "#C87F0A", "#D62C1A",
+				"#BAC4C5", "#76818D", "#69D3BF", "#7BBCE8", "#EF8A80"],
+		   chart: {
+			  backgroundColor: 'transparent'
+		   }
+		};
+		
+		// Apply the theme
+		Highcharts.setOptions(Highcharts.theme);
 		
 		/**
 		 * Dark theme for Highcharts JS
 		 * @author Torstein Honsi
 		 */
 
-		// Load the fonts
 		/*
+		// Load the fonts
 		Highcharts.createElement('link', {
 		   href: 'http://fonts.googleapis.com/css?family=Unica+One',
 		   rel: 'stylesheet',
 		   type: 'text/css'
 		}, null, document.getElementsByTagName('head')[0]);
-		*/
 
 		Highcharts.theme = {
 		   colors: ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
@@ -598,6 +595,7 @@
 
 		// Apply the theme
 		Highcharts.setOptions(Highcharts.theme);
+		*/
 	</script>
 </body>
 </html>
