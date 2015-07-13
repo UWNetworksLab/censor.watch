@@ -5,6 +5,22 @@ var express  = require('express');
 var app      = express();                   // create our app w/ express
 var morgan = require('morgan');             // log requests to the console (express4)
 var bodyParser = require('body-parser');    // pull information from HTML POST (express4)
+var argv = require('minimist')(process.argv.slice(2));
+
+var intRegex = /^\d+$/;
+if (!argv.port && !argv.hostname) {
+    console.error("ERROR: Missing required parameters --port and --hostname");
+    process.exit(1);
+} else if (!argv.port && !argv.hostname) {
+    console.error("ERROR: Missing required parameter --port");
+    process.exit(1);
+} else if (!argv.hostname) {
+    console.error("ERROR: Missing required parameter --hostname");
+    process.exit(1);
+} else if (!intRegex.test(argv.port) || parseInt(argv.port) <= 0 || parseInt(argv.port) >= 65535) {
+    console.error("ERROR: Invalid value for --port");
+    process.exit(1);
+}
 
 //
 // configuration
@@ -92,5 +108,5 @@ app.get('*', function(req, res) {
 //
 // listen (start app with node server.js)
 //
-app.listen(8080);
-console.log("Server listening on port 8080");
+app.listen(argv.port, argv.hostname);
+console.log("Server listening on " + argv.hostname + ":" + argv.port );
