@@ -5,33 +5,41 @@
     <title>CensorWatch</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	
-	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-	
-	<!-- Highmaps Includes -->
-	<script src="http://code.highcharts.com/maps/highmaps.js"></script>
-	<script src="http://code.highcharts.com/mapdata/index.js?1"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.js"></script>
-	<script src="./js/jquery.combobox.js"></script>
-	<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-	
+    
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    
+    <!-- Highmaps Includes -->
+    <script src="http://code.highcharts.com/maps/highmaps.js"></script>
+    <script src="http://code.highcharts.com/mapdata/index.js?1"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.js"></script>
+    <script src="./js/jquery.combobox.js"></script>
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <!-- Flag sprites service provided by Martijn Lafeber, https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE -->
+    <link rel="stylesheet" type="text/css" href="http://cloud.github.com/downloads/lafeber/world-flags-sprite/flags32.css" />
     <link rel="stylesheet" href="./css/bootstrap.css" media="screen">
     <!-- <link rel="stylesheet" href="../assets/css/bootswatch.min.css"> -->
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
-      <script src="../bower_components/html5shiv/dist/html5shiv.js"></script>
-      <script src="../bower_components/respond/dest/respond.min.js"></script>
-    <![endif]-->
+	<script src="../bower_components/html5shiv/dist/html5shiv.js"></script>
+	<script src="../bower_components/respond/dest/respond.min.js"></script>
+	<![endif]-->
 
     <script src="./js/bootstrap.min.js"></script>
     <!--<script src="../assets/js/bootswatch.js"></script>-->
+
+    <style media="screen" type="text/css">
+      tbody > tr > td.country-label {
+        padding-top: 13px;
+      }
+    </style>
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
           <!--<a href="../" class="navbar-brand">CensorWatch</a>-->
-		  <a href="../" class="navbar-brand" style="background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; height: 22px;background-position: 50% 100%; margin-right: 10px;"></a>
+	  <a href="../" class="navbar-brand" style="background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; height: 22px;background-position: 50% 100%; margin-right: 10px;"></a>
           <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -46,10 +54,10 @@
             <li>
               <a href="#">Ipsum</a>
             </li>
-			<li>
+	    <li>
               <a href="#">Help</a>
             </li>
-			
+	    
           </ul>
 
           <ul class="nav navbar-nav navbar-right">
@@ -63,539 +71,76 @@
 
     <div class="container" id="intro-header" style="margin-top: 4em;">
 
-	<div class="row">
-		<div class="col-lg-12">
-			<div class="page-header">
-				<h1 id="type" style="font-size: 4em;">Spheres of Influence</h1>
-				<h2>Click a country to visualize its IP Addresses</h2>
-			</div>
-		</div>
+      <div class="row">
+	<div class="col-lg-12">
+	  <div class="page-header">
+	    <h1 id="type" style="font-size: 4em;">Spheres of Influence</h1>
+	    <h2>Select a country to visualize others' similarity for the domain</h2>
+	  </div>
 	</div>
+      </div>
 
-	<div class="bs-component">
-		<nav class="navbar navbar-default">
-		<div class="container-fluid">
+      <div class="bs-component">
+	<nav class="navbar navbar-default">
+	  <div class="container-fluid">
 
-		  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-			  <li class="active"><a href="#">Filter 1 <span class="sr-only">(current)</span></a></li>
-			  <li><a href="#">Filter 2</a></li>
-			  <li class="dropdown">
-				<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More Options <span class="caret"></span></a>
-				<ul class="dropdown-menu" role="menu">
-				  <li><a href="#">Action</a></li>
-				  <li><a href="#">Another action</a></li>
-				  <li><a href="#">Something else here</a></li>
-				  <li class="divider"></li>
-				  <li><a href="#">Separated link</a></li>
-				  <li class="divider"></li>
-				  <li><a href="#">One more separated link</a></li>
-				</ul>
-			  </li>
-			</ul>
-			<form class="navbar-form navbar-left" role="search">
-			  <div class="form-group">
-				<select id="mapDropdown" class="ui-widget combobox"></select>
-			  </div>
-			</form>
-			<ul class="nav navbar-nav navbar-right">
-			  <li><a href="#">Generate Link</a></li>
-			</ul>
-		  </div>
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	      <ul class="nav navbar-nav">
+		<li class="active"><a href="#">Filter 1 <span class="sr-only">(current)</span></a></li>
+		<li><a href="#">Filter 2</a></li>
+		<li class="dropdown">
+		  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More Options <span class="caret"></span></a>
+		  <ul class="dropdown-menu" role="menu">
+		    <li><a href="#">Action</a></li>
+		    <li><a href="#">Another action</a></li>
+		    <li><a href="#">Something else here</a></li>
+		    <li class="divider"></li>
+		    <li><a href="#">Separated link</a></li>
+		    <li class="divider"></li>
+		    <li><a href="#">One more separated link</a></li>
+		  </ul>
+		</li>
+	      </ul>
+	      <form class="navbar-form navbar-left" role="search">
+		<div class="form-group">
+		  <select id="mapDropdown" class="ui-widget combobox"></select>
 		</div>
-		</nav>
-		<div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div>
-	</div>
-	
-	<!-- Highmaps -->
+	      </form>
+	      <ul class="nav navbar-nav navbar-right">
+		<li><a href="#">Generate Link</a></li>
+	      </ul>
+	    </div>
+	  </div>
+	</nav>
+	<div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div>
+      </div>
+      
+      <!-- Highmaps -->
+      <div class="col-lg-9">
 	<div id="demo-wrapper">
-		<div id="mapBox">
-			<div id="up"></div>
-			<div id="container"></div> 
-		</div>
+	  <div id="mapBox">
+	    <div id="up"></div>
+	    <div id="container"></div> 
+	  </div>
 	</div>
+      </div>
+      <div class="col-lg-3" style="height:400px;overflow-y:scroll;">
+	<table class="table table-striped table-hover ">
+	  <thead>
+	    <tr>
+	      <th></th>
+	      <th>Select a country</th>
+	    </tr>
+	  </thead>
+	  <tbody id="country-table-body">
+	  </tbody>
+      </div>
     </div>
-	
-	<!-- Highmaps -->
-	<style>
-		.ui-helper-hidden-accessible { position: absolute; left:-999em; }
-	</style>
-	<script type="text/javascript">
-		var sample_ip_to_country = {"96.127.173.70": ["AF"], "20.20.20.20": ["RU"], "193.58.251.1": ["RU"], "23.227.10.30": ["US", "IT", "NO", "DE", "CA", "MX", "NL", "IL", "FI", "ES", "GB", "AU", "KR", "GR", "BR", "SE", "MD", "TW", "IR", "CH", "PL", "AT", "TR", "ZA", "MY", "SI", "HR", "DK", "RU", "FR", "JP", "HU", "LV", "LU", "SK", "TN", "RO", "IN", "CZ", "PT", "EE", "UA", "ID", "JM", "GU", "HK", "SG", "CR", "CO", "NP", "CN", "AR", "MO", "TH", "FJ", "NZ", "PH", "LK", "MK", "AE", "BH", "BG", "CY", "BE", "IE", "LT", "MT", "TT", "PR", "UY", "PE", "VE", "DO", "KW", "CL", "GT", "BO", "IS", "BY", "RS", "MA", "AD", "MC", "ZM", "VN", "BD", "PK", "MV", "KH", "HN", "BS", "GI", "SN", "JO", "EG", "ME", "QA", "SA", "LB", "BA", "KZ", "PF", "LA", "MN", "BN", "BZ", "DM", "AO", "PA", "SV", "AM", "KE", "KG", "AL", "PS", "BM", "EC", "VI", "BB", "BW", "VC", "SM", "GE", "SD", "AZ", "LI", "PG", "NC", "NI", "GY", "LY", "UG", "PY", "AF", "MZ", "NG", "GM", "BF", "CU", "BJ", "OM", "SY", "MR", "CI", "TG", "GH", "MU", "CD", "NA", "TZ", "UZ", "SC", "DZ", "MW", "ZW", "LR", "IQ", "SB", "GD", "EU", "SO", "ML", "JE", "TJ", "VU", "MM", "AW", "CM", "GA", "AG", "ET", "LS", "GP", "KM", "MG", "GN", "RW", "CG", "GQ", "BI", "YT", "IO", "SZ", "TM", "TD", "IM"], "101.255.101.21": ["ID"], "69.24.67.213": ["US"], "67.231.108.252": ["US"], "192.168.0.1": ["US"], "192.168.1.1": ["US"], "67.215.65.130": ["US", "MX", "GB", "PL", "IN", "PH", "DZ"], "75.180.137.248": ["US"], "211.137.170.246": ["CN"], "216.146.35.97": ["MX", "PH"], "192.168.20.1": ["JP"]};
-	
-		$(function () {
-
-			/**
-			 * This is a complicated demo of Highmaps, not intended to get you up to speed
-			 * quickly, but to show off some basic maps and features in one single place.
-			 * For the basic demo, check out http://www.highcharts.com/maps/demo/geojson instead.
-			 */
-
-			// Base path to maps
-			var baseMapPath = "http://code.highcharts.com/mapdata/",
-				showDataLabels = false, // Switch for data labels enabled/disabled
-				mapCount = 0,
-				searchText,
-				mapOptions = '';
-
-			// Populate dropdown menus and turn into jQuery UI widgets
-			$.each(Highcharts.mapDataIndex, function (mapGroup, maps) {
-				if (mapGroup !== "version") {
-					mapOptions += '<option class="option-header">' + mapGroup + '</option>';
-					$.each(maps, function (desc, path) {
-						mapOptions += '<option value="' + path + '">' + desc + '</option>';
-						mapCount += 1;
-					});
-				}
-			});
-			searchText = 'Search ' + mapCount + ' maps';
-			mapOptions = '<option value="custom/world.js">' + searchText + '</option>' + mapOptions;
-			$("#mapDropdown").append(mapOptions).combobox();
-
-			// Change map when item selected in dropdown
-			$("#mapDropdown").change(function () {
-				var $selectedItem = $("option:selected", this),
-					mapDesc = $selectedItem.text(),
-					mapKey = this.value.slice(0, -3),
-					svgPath = baseMapPath + mapKey + '.svg',
-					geojsonPath = baseMapPath + mapKey + '.geo.json',
-					javascriptPath = baseMapPath + this.value,
-					isHeader = $selectedItem.hasClass('option-header');
-
-				// Dim or highlight search box
-				if (mapDesc === searchText || isHeader) {
-					$('.custom-combobox-input').removeClass('valid');
-					location.hash = '';
-				} else {
-					$('.custom-combobox-input').addClass('valid');
-					location.hash = mapKey;
-				}
-
-				if (isHeader) {
-					return false;
-				}
-
-				// Show loading
-				if ($("#container").highcharts()) {
-					$("#container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
-				}
-
-
-				// When the map is loaded or ready from cache...
-				function mapReady() {
-
-					var mapGeoJSON = Highcharts.maps[mapKey],
-						data = [],
-						parent,
-						match;
-						
-					var series = [];
-
-					// Generate non-random data for the map
-					/*
-					$.each(mapGeoJSON.features, function (index, feature) {
-						data.push({
-							key: feature.properties['hc-key'],
-							value: index
-						});
-					});
-					*/
-					
-					// Generate a new series for each ip
-					$.each(sample_ip_to_country, function (ip, countries) {					
-						series.push({
-							data: $.map(countries, function (code) {
-								return { code: code };
-							}),
-							name: ip,
-							states: {
-								hover: {
-									color: Highcharts.getOptions().colors[2]
-								}
-							},
-							dataLabels: {
-								enabled: showDataLabels,
-								formatter: function () {
-									return mapKey === 'custom/world' || mapKey === 'countries/us/us-all' ?
-											(this.point.properties && this.point.properties['hc-a2']) :
-											this.point.name;
-								}
-							},
-							point: {
-								events: {
-									// On click, look for a detailed map
-									click: function () {
-										/*
-										var key = this.key;
-										$('#mapDropdown option').each(function () {
-											if (this.value === 'countries/' + key.substr(0, 2) + '/' + key + '-all.js') {
-												$('#mapDropdown').val(this.value).change();
-											}
-										});
-										*/
-										// Selectively enable all IPs pertaining to the clicked country
-										var curr = this;
-										$.each(curr.series.chart.series, function (index, s) {
-											s.hide();
-										});
-										$.each(curr.series.chart.series, function (index, s) {
-											var grep_array = $.grep(s.data, function(n) { return n.code === curr.code; });
-											if (grep_array.length > 0) {
-												s.show();
-											}
-										});
-									}
-								}
-							}
-						});
-					});
-					
-					/*
-					series.push({
-						type: 'mapline',
-						name: "Separators",
-						data: Highcharts.geojson(mapGeoJSON, 'mapline'),
-						nullColor: 'gray',
-						showInLegend: true,
-						enableMouseTracking: false
-					});
-					*/
-
-					// Show arrows the first time a real map is shown
-					if (mapDesc !== searchText) {
-						$('.selector .prev-next').show();
-						$('#sideBox').show();
-					}
-
-					// Is there a layer above this?
-					match = mapKey.match(/^(countries\/[a-z]{2}\/[a-z]{2})-[a-z0-9]+-all$/);
-					if (/^countries\/[a-z]{2}\/[a-z]{2}-all$/.test(mapKey)) { // country
-						parent = {
-							desc: 'World',
-							key: 'custom/world'
-						};
-					} else if (match) { // admin1
-						parent = {
-							desc: $('option[value="' + match[1] + '-all.js"]').text(),
-							key: match[1] + '-all'
-						};
-					}
-					$('#up').html('');
-					if (parent) {
-						$('#up').append(
-							$('<a><i class="fa fa-angle-up"></i> ' + parent.desc + '</a>')
-								.attr({
-									title: parent.key
-								})
-								.click(function () {
-									$('#mapDropdown').val(parent.key + '.js').change();
-								})
-						);
-					}
-
-					// Instantiate chart
-					$("#container").highcharts('Map', {
-
-						title: {
-							text: null
-						},
-
-						mapNavigation: {
-							enabled: true
-						},
-						
-						legend: {
-							enabled: true
-						},
-
-						plotOptions: {
-							map: {
-								allAreas: false,
-								joinBy: ['iso-a2', 'code'],
-								dataLabels: {
-									enabled: true,
-									color: 'white',
-									formatter: function () {
-										if (this.point.properties && this.point.properties.labelrank.toString() < 5) {
-											return this.point.properties['iso-a2'];
-										}
-									},
-									format: null,
-									style: {
-										fontWeight: 'bold'
-									}
-								},
-								mapData: mapGeoJSON,
-								tooltip: {
-									headerFormat: '',
-									//pointFormat: '{point.name}: <b>{series.name}</b>'
-									pointFormatter: function() {
-										var curr = this;
-										var str = "IPs for " + this.name + "<br>";
-										$.each(series, function (index, s) {
-											var color = Highcharts.theme.colors[s._colorIndex];
-											var grep_array = $.grep(s.data, function(n) { return n.code === curr.code; });
-											if (grep_array.length > 0) {
-												str += '<span style="color:' + color + ';">\u25CF</span><b>  ' + s.name + '</b><br>';
-											}
-										});
-										return str;
-									}
-								}
-
-							}
-						},
-						series: series
-					});
-
-					showDataLabels = $("#chkDataLabels").attr('checked');
-
-				}
-
-				// Check whether the map is already loaded, else load it and
-				// then show it async
-				if (Highcharts.maps[mapKey]) {
-					mapReady();
-				} else {
-					$.getScript(javascriptPath, mapReady);
-				}
-			});
-
-			// Toggle data labels - Note: Reloads map with new random data
-			$("#chkDataLabels").change(function () {
-				showDataLabels = $("#chkDataLabels").attr('checked');
-				$("#mapDropdown").change();
-			});
-
-			// Trigger change event to load map on startup
-			if (location.hash) {
-				$('#mapDropdown').val(location.hash.substr(1) + '.js');
-			} else { // for IE9
-				$($('#mapDropdown option')[0]).attr('selected', 'selected');
-			}
-			$('#mapDropdown').change();
-		});
-
-		Highcharts.theme = {
-		   colors: ["#2C3E50", "#18BC9C", "#798D8F", "#217DBB", "#C87F0A", "#D62C1A",
-				"#BAC4C5", "#76818D", "#69D3BF", "#7BBCE8", "#EF8A80"],
-		   chart: {
-			  backgroundColor: 'transparent'
-		   }
-		};
-		
-		// Apply the theme
-		Highcharts.setOptions(Highcharts.theme);
-		
-		/**
-		 * Dark theme for Highcharts JS
-		 * @author Torstein Honsi
-		 */
-
-		/*
-		// Load the fonts
-		Highcharts.createElement('link', {
-		   href: 'http://fonts.googleapis.com/css?family=Unica+One',
-		   rel: 'stylesheet',
-		   type: 'text/css'
-		}, null, document.getElementsByTagName('head')[0]);
-
-		Highcharts.theme = {
-		   colors: ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-			  "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
-		   chart: {
-			  backgroundColor: 'transparent',
-			  style: {
-				 fontFamily: "'Unica One', sans-serif"
-			  },
-			  plotBorderColor: '#606063'
-		   },
-		   title: {
-			  style: {
-				 color: '#E0E0E3',
-				 textTransform: 'uppercase',
-				 fontSize: '20px'
-			  }
-		   },
-		   subtitle: {
-			  style: {
-				 color: '#E0E0E3',
-				 textTransform: 'uppercase'
-			  }
-		   },
-		   xAxis: {
-			  gridLineColor: '#707073',
-			  labels: {
-				 style: {
-					color: '#E0E0E3'
-				 }
-			  },
-			  lineColor: '#707073',
-			  minorGridLineColor: '#505053',
-			  tickColor: '#707073',
-			  title: {
-				 style: {
-					color: '#A0A0A3'
-
-				 }
-			  }
-		   },
-		   yAxis: {
-			  gridLineColor: '#707073',
-			  labels: {
-				 style: {
-					color: '#E0E0E3'
-				 }
-			  },
-			  lineColor: '#707073',
-			  minorGridLineColor: '#505053',
-			  tickColor: '#707073',
-			  tickWidth: 1,
-			  title: {
-				 style: {
-					color: '#A0A0A3'
-				 }
-			  }
-		   },
-		   tooltip: {
-			  backgroundColor: 'rgba(0, 0, 0, 0.85)',
-			  style: {
-				 color: '#F0F0F0'
-			  }
-		   },
-		   plotOptions: {
-			  series: {
-				 dataLabels: {
-					color: '#B0B0B3'
-				 },
-				 marker: {
-					lineColor: '#333'
-				 }
-			  },
-			  boxplot: {
-				 fillColor: '#505053'
-			  },
-			  candlestick: {
-				 lineColor: 'white'
-			  },
-			  errorbar: {
-				 color: 'white'
-			  }
-		   },
-		   legend: {
-			  itemStyle: {
-				 color: '#E0E0E3'
-			  },
-			  itemHoverStyle: {
-				 color: '#FFF'
-			  },
-			  itemHiddenStyle: {
-				 color: '#606063'
-			  }
-		   },
-		   credits: {
-			  style: {
-				 color: '#666'
-			  }
-		   },
-		   labels: {
-			  style: {
-				 color: '#707073'
-			  }
-		   },
-
-		   drilldown: {
-			  activeAxisLabelStyle: {
-				 color: '#F0F0F3'
-			  },
-			  activeDataLabelStyle: {
-				 color: '#F0F0F3'
-			  }
-		   },
-
-		   navigation: {
-			  buttonOptions: {
-				 symbolStroke: '#DDDDDD',
-				 theme: {
-					fill: '#505053'
-				 }
-			  }
-		   },
-
-		   // scroll charts
-		   rangeSelector: {
-			  buttonTheme: {
-				 fill: '#505053',
-				 stroke: '#000000',
-				 style: {
-					color: '#CCC'
-				 },
-				 states: {
-					hover: {
-					   fill: '#707073',
-					   stroke: '#000000',
-					   style: {
-						  color: 'white'
-					   }
-					},
-					select: {
-					   fill: '#000003',
-					   stroke: '#000000',
-					   style: {
-						  color: 'white'
-					   }
-					}
-				 }
-			  },
-			  inputBoxBorderColor: '#505053',
-			  inputStyle: {
-				 backgroundColor: '#333',
-				 color: 'silver'
-			  },
-			  labelStyle: {
-				 color: 'silver'
-			  }
-		   },
-
-		   navigator: {
-			  handles: {
-				 backgroundColor: '#666',
-				 borderColor: '#AAA'
-			  },
-			  outlineColor: '#CCC',
-			  maskFill: 'rgba(255,255,255,0.1)',
-			  series: {
-				 color: '#7798BF',
-				 lineColor: '#A6C7ED'
-			  },
-			  xAxis: {
-				 gridLineColor: '#505053'
-			  }
-		   },
-
-		   scrollbar: {
-			  barBackgroundColor: '#808083',
-			  barBorderColor: '#808083',
-			  buttonArrowColor: '#CCC',
-			  buttonBackgroundColor: '#606063',
-			  buttonBorderColor: '#606063',
-			  rifleColor: '#FFF',
-			  trackBackgroundColor: '#404043',
-			  trackBorderColor: '#404043'
-		   },
-
-		   // special colors for some of the
-		   legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
-		   background2: '#505053',
-		   dataLabelsColor: '#B0B0B3',
-		   textColor: '#C0C0C0',
-		   contrastTextColor: '#F0F0F3',
-		   maskColor: 'rgba(255,255,255,0.3)'
-		};
-
-		// Apply the theme
-		Highcharts.setOptions(Highcharts.theme);
-		*/
-	</script>
-</body>
+    
+    <!-- Highmaps -->
+    <style>
+      .ui-helper-hidden-accessible { position: absolute; left:-999em; }
+    </style>
+    <script src="./js/spheres-chart.js"></script>
+  </body>
 </html>
