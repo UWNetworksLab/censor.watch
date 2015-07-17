@@ -96,6 +96,32 @@ app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     }
 });
 
+app.get('/api/similar_domains/:domain/:date', function(req, res) {
+    var domain = req.params.domain;
+    var date = req.params.date;
+    var filename = date + "_clusters.json";
+    if (filename in files) {
+	var data = files[filename];
+	var found = false;
+	for (var i = 0; i < data.length; i++) {
+	    var cluster = data[i];
+	    if (cluster != null) {
+		for (var j = 0; j < cluster.length; j++) {
+		    if (cluster[j] === domain) {
+			found = true;
+			res.json(cluster);
+		    }
+		}
+	    }
+	}
+	if (!found) {
+	    res.json([]);
+	}
+    } else {
+	res.json([]);
+    }
+});
+
 //
 // application
 //

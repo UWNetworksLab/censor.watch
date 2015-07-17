@@ -1,11 +1,12 @@
 // Mutable variables
-var currCountry = 'US',
+var currCountry = '',
     country_code_map = {},
     country_to_country,  // Currently loaded country->country clustering data
     date = "06-29-2015"; // TODO - add date picker
 
 // Immutable variables
 var baseMapPath = "http://code.highcharts.com/mapdata/",
+    defaultDomain = 'www.dhl.com',  // Default domain to show on initial render
     showDataLabels = false, // Switch for data labels enabled/disabled
     map = "custom/world.js",
     mapDesc = "World",
@@ -18,15 +19,15 @@ $(function () {
     // Fetch map of country code -> friendly country names
     $.get( "/api/country_code_map", function( data ) {
 	country_code_map = data;
+
+	// Add "All Countries" table entry
+	var element_string = "<tr class='info'><td></td><td class='country-label' data-country=''>All Countries</td></tr>";
+	$("#country-table-body").append(element_string);
 	
 	// Update country selection sidebar
 	$.each(data, function (country_code) {
 	    var friendly_country_name = country_code_map[country_code];
 	    var class_string = "";
-	    if (country_code === currCountry) {
-		// Currently selected country
-		class_string = "info";
-	    }
 	    // Add f32 flag icon to row
 	    var flag_string = '<td><span class="f32"><span class="flag ' + country_code.toLowerCase() + '" id="flag"></span></span></td>';
 	    var element_string = "<tr class='" + class_string + "'>" + flag_string + "<td class='country-label' data-country='" + country_code + "'>" + friendly_country_name + "</td></tr>";
@@ -36,7 +37,7 @@ $(function () {
 	// Add click handler for countries table
 	$(".country-label").click(function() {
 	    currCountry = $(this).attr("data-country");
-	    $("#country-table-body tr").each(function () {
+	    $("#country-table-body tr.info").each(function () {
 		$(this).removeClass("info");
 	    });
 	    $(this).parent().addClass("info");
@@ -66,7 +67,8 @@ function country_code_map_loaded() {
 	if (location.hash) {
             $('#mapDropdown').val(location.hash.substr(1) + '.js');
 	} else { // for IE9
-            $($('#mapDropdown option')[0]).attr('selected', 'selected');
+            // $($('#mapDropdown option')[0]).attr('selected', 'selected');
+	    $('#mapDropdown option[value="' + defaultDomain + '"]').attr('selected', 'selected');
 	}
 	
 	// Change map when item selected in dropdown
@@ -106,6 +108,56 @@ function mapChange(currDomain) {
 	    $.getScript(javascriptPath, mapReady);
         }
     });
+
+    // Populate similar domains tables below chart
+    $.get( "/api/similar_domains/" + currDomain + "/" + date, function( data ) {
+	$("#domain-table-body-0").empty();
+	$("#domain-table-body-1").empty();
+	$("#domain-table-body-2").empty();
+	$("#domain-table-body-3").empty();
+
+	$.each(data, function (i) {
+	    var domain = data[i];
+	    var class_string = "";
+	    if (domain == currDomain) {
+		class_string = "info";
+	    }
+	    var element_string = "<tr class='" + class_string + "'><td class='domain-label' data-domain='" + domain + "'>" + domain + "</td></tr>";
+
+	    // Distribute the domains across the 4 tables
+	    if (0 <= i && i < data.length / 4) {
+		$("#domain-table-body-0").append(element_string);
+	    } else if (data.length / 4 <= i && i < data.length / 2) {
+		$("#domain-table-body-1").append(element_string);
+	    } else if (data.length / 2 <= i && i < 3 * data.length / 4) {
+		$("#domain-table-body-2").append(element_string);
+	    } else {
+		$("#domain-table-body-3").append(element_string);
+	    }
+	});
+
+	// Add click handler for countries table
+	$(".domain-label").click(function() {
+	    // Visually clear selections from all 4 tables & set our selection
+	    $("#domain-table-body-0 tr.info").each(function () {
+		$(this).removeClass("info");
+	    });
+	    $("#domain-table-body-1 tr.info").each(function () {
+		$(this).removeClass("info");
+	    });
+	    $("#domain-table-body-2 tr.info").each(function () {
+		$(this).removeClass("info");
+	    });
+	    $("#domain-table-body-3 tr.info").each(function () {
+		$(this).removeClass("info");
+	    });
+	    $(this).parent().addClass("info");
+
+	    var value = $(this).attr("data-domain");
+	    $('#mapDropdown').val(value);
+	    $('#mapDropdown').change();
+	});
+    });
 }
 
 // When the map is loaded or ready from cache...
@@ -127,18 +179,45 @@ function mapReady() {
     );
 
     // Load data for the currently selected country
-    var currCountryData = country_to_country[currCountry];
-    if (currCountryData) {
-	$.each(currCountryData, function (toCountry, value) {
-	    if (toCountry !== "undefined") {
-		data.push({
-		    key: toCountry.toLowerCase(),
-		    value: value
-		});
-	    }
+    if (currCountry == '') {
+	// Sum the data for all countries
+	var all_country_data = {};
+	$.each(country_to_country, function(fromCountry, currCountryData) {
+	    $.each(currCountryData, function (toCountry, value) {
+		if (toCountry !== "undefined") {
+		    if (all_country_data[toCountry.toLowerCase()]) {
+			all_country_data[toCountry.toLowerCase()] += value;
+		    } else {
+			all_country_data[toCountry.toLowerCase()] = value;
+		    }
+		}
+	    });
 	});
+	$.each(all_country_data, function(country, value) {
+	    data.push({
+		key: country,
+		value: value
+	    });
+	});
+    } else {
+	var currCountryData = country_to_country[currCountry];
+	if (currCountryData) {
+	    $.each(currCountryData, function (toCountry, value) {
+		if (toCountry !== "undefined") {
+		    data.push({
+			key: toCountry.toLowerCase(),
+			value: value
+		    });
+		}
+	    });
+	}
     }
 
+    var seriesName = "All Countries";
+    if (currCountry != "") {
+	seriesName = country_code_map[currCountry];
+    }
+    
     // Instantiate chart
     $("#container").highcharts('Map', {
 
@@ -169,7 +248,7 @@ function mapReady() {
             data: data,
             mapData: mapGeoJSON,
             joinBy: ['hc-key', 'key'],
-            name: 'Similarity to ' + country_code_map[currCountry],
+            name: 'Resolutions for ' + seriesName,
             states: {
                 hover: {
                     color: Highcharts.getOptions().colors[2]
@@ -187,12 +266,14 @@ function mapReady() {
                 events: {
                     // On click, look for a detailed map
 		    click: function () {
+			/*
 			var key = this.key;
 			$('#mapDropdown option').each(function () {
 			    if (this.value === 'countries/' + key.substr(0, 2) + '/' + key + '-all.js') {
 				$('#mapDropdown').val(this.value).change();
 			    }
 			});
+			*/
 		    }
                 }
             }
