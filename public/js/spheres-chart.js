@@ -1,5 +1,6 @@
 // Mutable variables
 var currCountry = '',
+    currDomain = 'www.dhl.com',
     country_code_map = {},
     country_to_country,  // Currently loaded country->country clustering data
     date = "06-29-2015"; // TODO - add date picker
@@ -74,7 +75,8 @@ function country_code_map_loaded() {
 	// Change map when item selected in dropdown
 	$('#mapDropdown').change(function() {
 	    var domain = $("option:selected", this).text();
-	    mapChange(domain);
+	    currDomain = domain;
+	    mapChange();
 	});
 
 	$('#mapDropdown').change();
@@ -90,10 +92,10 @@ function country_code_map_loaded() {
 }
 
 // When map to load has changed
-function mapChange(currDomain) {
+function mapChange() {
     // Show loading
-    if ($("#container").highcharts()) {
-        $("#container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
+    if ($("#map-container").highcharts()) {
+        $("#map-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
     }
 
     // Fetch data for the current domain on the current date
@@ -154,6 +156,7 @@ function mapChange(currDomain) {
 	    $(this).parent().addClass("info");
 
 	    var value = $(this).attr("data-domain");
+	    currDomain = value;
 	    $('#mapDropdown').val(value);
 	    $('#mapDropdown').change();
 	});
@@ -177,6 +180,9 @@ function mapReady() {
             '<a target="_blank" href="' + geojsonPath + '">GeoJSON</a>, ' +
             '<a target="_blank" href="' + javascriptPath + '">JavaScript</a>.</div>'
     );
+
+    // Fetch data for the current domain & country for the timeseries chart
+    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry, function (data) { chartChange( data ) } );
 
     // Load data for the currently selected country
     if (currCountry == '') {
@@ -219,7 +225,7 @@ function mapReady() {
     }
     
     // Instantiate chart
-    $("#container").highcharts('Map', {
+    $("#map-container").highcharts('Map', {
 
         title: {
             text: null
@@ -288,4 +294,41 @@ function mapReady() {
     });
 
     showDataLabels = $("#chkDataLabels").attr('checked');
+}
+
+// When a new time series chart is ready to load
+function chartChange(data) {
+    var country = 'All Countries';
+    if (currCountry != '') {
+	country = country_code_map[currCountry];
+    }
+    $('#chart-container').highcharts({
+        title: {
+            text: 'Resolutions for ' + currDomain + ' in ' + country
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Percent of total'
+            }
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.percentage:.1f}%</b> ({point.y:,.2f})<br/>',
+            shared: true
+        },
+        plotOptions: {
+            area: {
+                stacking: 'percent',
+                lineColor: '#ffffff',
+                lineWidth: 1,
+                marker: {
+                    lineWidth: 1,
+                    lineColor: '#ffffff'
+                }
+            }
+        },
+        series: data
+    });
 }

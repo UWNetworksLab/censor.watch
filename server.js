@@ -38,6 +38,7 @@ var fs = require('fs');
 var path = require('path');
 
 var files = {};
+var days = [];  // Sorted list of days for which we have satellite data
 var dataDir = "./data";
 
 console.log("Loading data files from " + dataDir);
@@ -45,10 +46,26 @@ console.log("Loading data files from " + dataDir);
 var dataFiles = fs.readdirSync(dataDir);
 dataFiles.forEach(function(file) {
     abs_file = path.resolve(dataDir, file);
-    var data = fs.readFileSync(abs_file);
-    
-    files[file] = JSON.parse(data.toString());
-    console.log("Loaded data file: " + file);
+    var stat = fs.statSync(abs_file);
+    if (stat.isDirectory()) {
+	days.push(file);
+	files[file] = {};
+	// Recurse into each satellite run directory
+	var dailyPath = dataDir + '/' + file;
+	var dailyFiles = fs.readdirSync(dailyPath);
+	dailyFiles.forEach(function(dailyFile) {
+	    // Load run files into map, emulating directory structure
+	    abs_file = path.resolve(dailyPath, dailyFile);
+	    var data = fs.readFileSync(abs_file);
+	    files[file][dailyFile] = JSON.parse(data.toString());
+	    console.log("Loaded data file: " + file + '/' + dailyFile);
+	});
+    } else {
+	// This is a non-satellite data file (top-level)
+	var data = fs.readFileSync(abs_file);
+	files[file] = JSON.parse(data.toString());
+	console.log("Loaded data file: " + file);
+    }
 });
 	   
 //
@@ -64,12 +81,80 @@ app.get('/api/country_code_map', function(req, res) {
     }
 });
 
+// List all days for which we have data
+app.get('/api/list_all_days', function(req, res) {
+    res.json(days);
+});
+
+// Fetch aggregate data for chart for domain for country
+// Country is optional: if missing, will return for All Countries
+app.get('/api/chart_for_domain/:domain', function(req, res) {
+    var domain = req.params.domain;
+    var country = req.query.country;
+    var filename = "cntry-cntry.json";
+    var ret = [];
+    var series = {};
+    for (var i in days) {
+	var date = days[i];
+	var timestamp = Math.floor(new Date(date));
+	if (date in files && filename in files[date]) {
+	    var data = files[date][filename];
+	    if (domain in data) {
+		var domain_data = data[domain];
+		if (country) {
+		    if (country in domain_data) {
+			var origin_data = domain_data[country];
+			// Perform for single country
+			for (var resolved_country in origin_data) {
+			    if (resolved_country !== "undefined") {
+				if (!series[resolved_country]) {
+				    series[resolved_country] = [];
+				}
+				series[resolved_country].push([timestamp, origin_data[resolved_country]]);
+			    }
+			}
+		    }
+		} else {
+		    // Perform for all countries
+		    for (var origin_country in domain_data) {
+			var origin_data = domain_data[origin_country];
+			for (var resolved_country in origin_data) {
+			    if (resolved_country !== "undefined") {
+				if (!series[resolved_country]) {
+				    series[resolved_country] = [];
+				}
+				// See if we've already have an entry for today (if so, sum to that)
+				var len = series[resolved_country].length;
+				var last_entry = series[resolved_country][len - 1];
+				if (last_entry && last_entry[0] === timestamp) {
+				    series[resolved_country][len - 1][1] += origin_data[resolved_country];
+				} else {
+				    series[resolved_country].push([timestamp, origin_data[resolved_country]]);
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+    // Construct series return array
+    for (var country in series) {
+	ret.push({
+	    type: 'area',
+	    name: country,
+	    data: series[country]
+	});
+    }
+    res.json(ret);
+});
+
 app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
-    var filename = date + "_cntry-cntry.json";
-    if (filename in files) {
-	var data = files[filename];
+    var filename = "cntry-cntry.json";
+    if (date in files && filename in files[date]) {
+	var data = files[date][filename];
 	if (domain in data) {
 	    res.json(data[domain]);
 	} else {
@@ -83,9 +168,9 @@ app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
 app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
-    var filename = date + "_cntry-cntry.json";
-    if (filename in files) {
-	var data = files[filename];
+    var filename = "cntry-cntry.json";
+    if (date in files && filename in files[date]) {
+	var data = files[date][filename];
 	var domain_list = [];
 	for(var domain in data) {
 	    domain_list.push(domain);
@@ -99,9 +184,9 @@ app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
 app.get('/api/similar_domains/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
-    var filename = date + "_clusters.json";
-    if (filename in files) {
-	var data = files[filename];
+    var filename = "clusters.json";
+    if (date in files && filename in files[date]) {
+	var data = files[date][filename];
 	var found = false;
 	for (var i = 0; i < data.length; i++) {
 	    var cluster = data[i];

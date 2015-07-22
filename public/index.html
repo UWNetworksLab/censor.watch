@@ -8,10 +8,13 @@
     
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     
-    <!-- Highmaps Includes -->
+    <!-- Highmaps/charts Includes -->
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-    <script src="http://code.highcharts.com/maps/highmaps.js"></script>
+    <!--<script src="http://code.highcharts.com/maps/highmaps.js"></script>-->
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/maps/modules/map.js"></script>
     <script src="http://code.highcharts.com/mapdata/index.js?1"></script>
+    <script src="http://code.highcharts.com/highcharts-more.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.js"></script>
     <script src="./js/jquery.combobox.js"></script>
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -27,7 +30,6 @@
 	<![endif]-->
 
     <script src="./js/bootstrap.min.js"></script>
-    <!--<script src="../assets/js/bootswatch.js"></script>-->
 
     <style media="screen" type="text/css">
       tbody > tr > td.country-label {
@@ -120,12 +122,12 @@
 	<div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div>
       </div>
       
-      <!-- Highmaps -->
+      <!-- Highmap -->
       <div class="col-lg-9">
 	<div id="demo-wrapper">
 	  <div id="mapBox">
 	    <div id="up"></div>
-	    <div id="container"></div> 
+	    <div id="map-container"></div> 
 	  </div>
 	</div>
       </div>
@@ -143,6 +145,10 @@
 	</table>
       </div>
 
+      <!-- Highchart -->
+      <div class="col-lg-12">
+	<div id="chart-container"></div>
+      </div>
       
       <div class="col-lg-12">
 	<h2>Other sites using the same IPs as this domain</h2>
