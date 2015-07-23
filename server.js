@@ -99,42 +99,14 @@ app.get('/api/chart_for_domain/:domain', function(req, res) {
 	var timestamp = Math.floor(new Date(date));
 	if (date in files && filename in files[date]) {
 	    var data = files[date][filename];
-	    if (domain in data) {
-		var domain_data = data[domain];
-		if (country) {
-		    if (country in domain_data) {
-			var origin_data = domain_data[country];
-			// Perform for single country
-			for (var resolved_country in origin_data) {
-			    if (resolved_country !== "undefined") {
-				if (!series[resolved_country]) {
-				    series[resolved_country] = [];
-				}
-				series[resolved_country].push([timestamp, origin_data[resolved_country]]);
-			    }
-			}
-		    }
-		} else {
-		    // Perform for all countries
-		    for (var origin_country in domain_data) {
-			var origin_data = domain_data[origin_country];
-			for (var resolved_country in origin_data) {
-			    if (resolved_country !== "undefined") {
-				if (!series[resolved_country]) {
-				    series[resolved_country] = [];
-				}
-				// See if we've already have an entry for today (if so, sum to that)
-				var len = series[resolved_country].length;
-				var last_entry = series[resolved_country][len - 1];
-				if (last_entry && last_entry[0] === timestamp) {
-				    series[resolved_country][len - 1][1] += origin_data[resolved_country];
-				} else {
-				    series[resolved_country].push([timestamp, origin_data[resolved_country]]);
-				}
-			    }
-			}
-		    }
+	    if (domain === "All Domains") {
+		// Aggregate across all domains
+		for (var domain_i in data) {
+		    series = chart_for_domain_helper(timestamp, domain_i, country, data, series);
 		}
+	    } else {
+		// Single domain
+		series = chart_for_domain_helper(timestamp, domain, country, data, series);
 	    }
 	}
     }
@@ -149,16 +121,81 @@ app.get('/api/chart_for_domain/:domain', function(req, res) {
     res.json(ret);
 });
 
+// Helper function for chart_for_domain endpoint
+function chart_for_domain_helper(timestamp, domain, country, data, series) {
+    if (domain in data) {
+	var domain_data = data[domain];
+	if (country) {
+	    if (country in domain_data) {
+		var origin_data = domain_data[country];
+		// Perform for single country
+		for (var resolved_country in origin_data) {
+		    if (resolved_country !== "undefined") {
+			if (!series[resolved_country]) {
+			    series[resolved_country] = [];
+			}
+			series[resolved_country].push([timestamp, origin_data[resolved_country]]);
+		    }
+		}
+	    }
+	} else {
+	    // Perform for all countries
+	    for (var origin_country in domain_data) {
+		var origin_data = domain_data[origin_country];
+		for (var resolved_country in origin_data) {
+		    if (resolved_country !== "undefined") {
+			if (!series[resolved_country]) {
+			    series[resolved_country] = [];
+			}
+			// See if we've already have an entry for today (if so, sum to that)
+			var len = series[resolved_country].length;
+			var last_entry = series[resolved_country][len - 1];
+			if (last_entry && last_entry[0] === timestamp) {
+			    series[resolved_country][len - 1][1] += origin_data[resolved_country];
+			} else {
+			    series[resolved_country].push([timestamp, origin_data[resolved_country]]);
+			}
+		    }
+		}
+	    }
+	}
+    }
+    return series;
+}
+
+// Get country->country data (from cntry-cntry.json) for domain for date
+// 'all' domain will be interpreted as aggregating across all domains
 app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
     var filename = "cntry-cntry.json";
     if (date in files && filename in files[date]) {
 	var data = files[date][filename];
-	if (domain in data) {
-	    res.json(data[domain]);
+	if (domain === 'All Domains') {
+	    var ret = {};
+	    // Empty domain implies aggregating all domains
+	    for (var domain_i in data) {
+		var domain_data = data[domain_i];
+		for (var from_country in domain_data) {
+		    if (!(from_country in ret)) {
+			ret[from_country] = {};
+		    }
+		    var from_country_data = domain_data[from_country];
+		    for (var to_country in from_country_data) {
+			if (!(to_country in ret[from_country])) {
+			    ret[from_country][to_country] = 0.0;
+			}
+			ret[from_country][to_country] += from_country_data[to_country];
+		    }
+		}
+	    }
+	    res.json(ret);
 	} else {
-	    res.json({});
+	    if (domain in data) {
+		res.json(data[domain]);
+	    } else {
+		res.json({});
+	    }
 	}
     } else {
 	res.json({});

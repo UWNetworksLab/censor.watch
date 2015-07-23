@@ -98,6 +98,11 @@ function mapChange() {
         $("#map-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
     }
 
+    // Show loading for chart
+    if ($("#chart-container").highcharts()) {
+        $("#chart-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
+    }
+
     // Fetch data for the current domain on the current date
     $.get( "/api/countries_by_domain/" + currDomain + "/" + date, function( data ) {
 	country_to_country = data;
@@ -332,3 +337,28 @@ function chartChange(data) {
         series: data
     });
 }
+
+// Add click handler for "Single Domain" button
+$("#single-domain").click(function() {
+    // Switch active buttons, enable input, show other sites
+    $('#all-domains').removeClass('active');
+    $(this).addClass('active');
+    $('.custom-combobox input').prop('disabled', false);
+    $('#other-sites-container').show();
+    
+    currDomain = defaultDomain;
+    $('#mapDropdown').val(currDomain);
+    $('#mapDropdown').change();
+});
+
+// Add click handler for "All Domains" button
+$("#all-domains").click(function() {
+    // Switch active buttons, disable input, hide other sites
+    $('#single-domain').removeClass('active');
+    $(this).addClass('active');
+    $('.custom-combobox input').prop('disabled', true);
+    $('#other-sites-container').hide();
+    
+    currDomain = 'All Domains';
+    mapChange();
+});
