@@ -317,7 +317,9 @@ function chartChange(data) {
         yAxis: {
             title: {
                 text: 'Percent of total'
-            }
+            },
+	    min: 0,
+	    max: 100
         },
         tooltip: {
             pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.percentage:.1f}%</b> ({point.y:,.2f})<br/>',

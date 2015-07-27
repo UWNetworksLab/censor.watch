@@ -145,35 +145,34 @@ function chart_for_domain_helper(timestamp, domain, country, data, series) {
 	if (country) {
 	    if (country in domain_data) {
 		var origin_data = domain_data[country];
-		// Perform for single country
-		for (var resolved_country in origin_data) {
-		    if (resolved_country !== "undefined") {
-			if (!series[resolved_country]) {
-			    series[resolved_country] = [];
-			}
-			series[resolved_country].push([timestamp, origin_data[resolved_country]]);
-		    }
-		}
+		series = resolved_country_sum_helper(origin_data, timestamp, series);
 	    }
 	} else {
 	    // Perform for all countries
 	    for (var origin_country in domain_data) {
 		var origin_data = domain_data[origin_country];
-		for (var resolved_country in origin_data) {
-		    if (resolved_country !== "undefined") {
-			if (!series[resolved_country]) {
-			    series[resolved_country] = [];
-			}
-			// See if we've already have an entry for today (if so, sum to that)
-			var len = series[resolved_country].length;
-			var last_entry = series[resolved_country][len - 1];
-			if (last_entry && last_entry[0] === timestamp) {
-			    series[resolved_country][len - 1][1] += origin_data[resolved_country];
-			} else {
-			    series[resolved_country].push([timestamp, origin_data[resolved_country]]);
-			}
-		    }
-		}
+		series = resolved_country_sum_helper(origin_data, timestamp, series);
+	    }
+	}
+    }
+    return series;
+}
+
+// Helper for chart_for_domain_helper
+function resolved_country_sum_helper(origin_data, timestamp, series) {
+    // Perform for single country
+    for (var resolved_country in origin_data) {
+	if (resolved_country !== "undefined") {
+	    if (!series[resolved_country]) {
+		series[resolved_country] = [];
+	    }
+	    // See if we've already have an entry for today (if so, sum to that)
+	    var len = series[resolved_country].length;
+	    var last_entry = series[resolved_country][len - 1];
+	    if (last_entry && last_entry[0] === timestamp) {
+		series[resolved_country][len - 1][1] += origin_data[resolved_country];
+	    } else {
+		series[resolved_country].push([timestamp, origin_data[resolved_country]]);
 	    }
 	}
     }
