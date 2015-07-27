@@ -7,6 +7,16 @@ var morgan = require('morgan');             // log requests to the console (expr
 var bodyParser = require('body-parser');    // pull information from HTML POST (express4)
 var argv = require('minimist')(process.argv.slice(2));
 
+//
+// valid flags:
+//
+// required:
+// --port [port]
+// --hostname [hostname]
+//
+// optional:
+// --disablessl
+//
 var intRegex = /^\d+$/;
 if (!argv.port && !argv.hostname) {
     console.error("ERROR: Missing required parameters --port and --hostname");
@@ -20,6 +30,13 @@ if (!argv.port && !argv.hostname) {
 } else if (!intRegex.test(argv.port) || parseInt(argv.port) <= 0 || parseInt(argv.port) >= 65535) {
     console.error("ERROR: Invalid value for --port");
     process.exit(1);
+}
+
+if (!argv.disablessl) {
+    // set up a route to redirect http to https
+    app.get('*', function(req, res) {  
+	res.redirect('https://' + req.headers['host'] + req.url)
+    })
 }
 
 //
