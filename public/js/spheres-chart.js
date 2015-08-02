@@ -3,7 +3,7 @@ var currCountry = '',
     currDomain = 'www.dhl.com',
     country_code_map = {},
     country_to_country,  // Currently loaded country->country clustering data
-    date = "06-29-2015"; // TODO - add date picker
+    date = "06-29-2015";
 
 // Immutable variables
 var baseMapPath = "http://code.highcharts.com/mapdata/",
@@ -233,7 +233,7 @@ function mapReady() {
     $("#map-container").highcharts('Map', {
 
         title: {
-            text: null
+            text: "Resolutions for " + currDomain + " in " + seriesName + " on " + date
         },
 
         mapNavigation: {
@@ -307,10 +307,26 @@ function chartChange(data) {
     if (currCountry != '') {
 	country = country_code_map[currCountry];
     }
+    
+    var labels = [];
+    if (jQuery.isEmptyObject(data)) {
+	labels.push({
+	    html: "No Data Available",
+	    style: {
+		left: '480%',
+		top: '140%',
+		fontSize : '18px'
+	    }
+	});
+    }
+    
     $('#chart-container').highcharts({
         title: {
-            text: 'Resolutions for ' + currDomain + ' in ' + country
+            text: "Click a day below to view on the map"
         },
+	labels: {
+	    items: labels
+	},
         xAxis: {
             type: 'datetime'
         },
@@ -334,7 +350,17 @@ function chartChange(data) {
                     lineWidth: 1,
                     lineColor: '#ffffff'
                 }
-            }
+            },
+	    series: {
+		cursor: 'pointer',
+		events: {
+		    click: function(event) {
+			var x = event.point.x;
+			date = $.datepicker.formatDate('mm-dd-yy', new Date(x));
+			mapChange();
+		    }
+		}
+	    }
         },
         series: data
     });
