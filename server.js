@@ -131,7 +131,7 @@ app.get('/api/chart_for_domain/:domain', function(req, res) {
     for (var country in series) {
 	ret.push({
 	    type: 'area',
-	    name: files["country_code_map.json"][country],
+	    name: files["country_code_map.json"][country.toLowerCase()],
 	    data: series[country]
 	});
     }

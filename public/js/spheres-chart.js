@@ -30,7 +30,7 @@ $(function () {
 	    var friendly_country_name = country_code_map[country_code];
 	    var class_string = "";
 	    // Add f32 flag icon to row
-	    var flag_string = '<td><span class="f32"><span class="flag ' + country_code.toLowerCase() + '" id="flag"></span></span></td>';
+	    var flag_string = '<td><span class="f32"><span class="flag ' + country_code + '" id="flag"></span></span></td>';
 	    var element_string = "<tr class='" + class_string + "'>" + flag_string + "<td class='country-label' data-country='" + country_code + "'>" + friendly_country_name + "</td></tr>";
 	    $("#country-table-body").append(element_string);
 	});
@@ -187,41 +187,71 @@ function mapReady() {
     );
 
     // Fetch data for the current domain & country for the timeseries chart
-    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry, function (data) { chartChange( data ) } );
+    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) { chartChange( data ) } );
 
     // Load data for the currently selected country
+    var aggregated_data = {};
     if (currCountry == '') {
 	// Sum the data for all countries
-	var all_country_data = {};
 	$.each(country_to_country, function(fromCountry, currCountryData) {
 	    $.each(currCountryData, function (toCountry, value) {
 		if (toCountry !== "undefined") {
-		    if (all_country_data[toCountry.toLowerCase()]) {
-			all_country_data[toCountry.toLowerCase()] += value;
+		    if (aggregated_data[toCountry]) {
+			aggregated_data[toCountry] += value;
 		    } else {
-			all_country_data[toCountry.toLowerCase()] = value;
+			aggregated_data[toCountry] = value;
 		    }
 		}
 	    });
 	});
-	$.each(all_country_data, function(country, value) {
-	    data.push({
-		key: country,
-		value: value
-	    });
-	});
     } else {
-	var currCountryData = country_to_country[currCountry];
+	// Data for a single country
+	var currCountryData = country_to_country[currCountry.toUpperCase()];
 	if (currCountryData) {
 	    $.each(currCountryData, function (toCountry, value) {
 		if (toCountry !== "undefined") {
-		    data.push({
-			key: toCountry.toLowerCase(),
-			value: value
-		    });
+		    aggregated_data[toCountry] = value;
 		}
 	    });
 	}
+    }
+
+    // Put formatted data into map series array
+    var currCountryVal = null;
+    $.each(country_code_map, function(country, countryName) {
+	var value = null;
+	var countryUpper = country.toUpperCase();
+	if (countryUpper in aggregated_data) {
+	    value = aggregated_data[countryUpper];
+	}
+	if (country === currCountry) {
+	    currCountryVal = value;
+	} else {
+	    if (value === null) {
+		data.push({
+		    key: country,
+		    value: 0
+		});
+	    } else {
+		data.push({
+		    key: country,
+		    value: value
+		});
+	    }
+	}
+    });
+    if (currCountryVal === null) {
+	data.push({
+	    key: currCountry,
+	    value: 0,
+	    borderColor: '#ED1C24'
+	});
+    } else {
+	data.push({
+	    key: currCountry,
+	    value: currCountryVal,
+	    borderColor: '#ED1C24'
+	});
     }
 
     var seriesName = "All Countries";
@@ -275,16 +305,12 @@ function mapReady() {
             },
             point: {
                 events: {
-                    // On click, look for a detailed map
 		    click: function () {
-			/*
-			var key = this.key;
-			$('#mapDropdown option').each(function () {
-			    if (this.value === 'countries/' + key.substr(0, 2) + '/' + key + '-all.js') {
-				$('#mapDropdown').val(this.value).change();
-			    }
-			});
-			*/
+			// Automatically change country selection in sidebar when we click on map
+			$(".country-label[data-country='" + currCountry + "']").parent().removeClass("info");
+			currCountry = this.key;
+			$(".country-label[data-country='" + currCountry + "']").parent().addClass("info");
+			mapChange();
 		    }
                 }
             }
@@ -371,8 +397,8 @@ $("#single-domain").click(function() {
     // Switch active buttons, enable input, show other sites
     $('#all-domains').removeClass('active');
     $(this).addClass('active');
-    $('.custom-combobox input').prop('disabled', false);
-    $('#other-sites-container').show();
+    $('.custom-combobox input').prop('disabled', false); // Enable input
+    $('#other-sites-container').show(); // Show "other sites" table
     
     currDomain = defaultDomain;
     $('#mapDropdown').val(currDomain);
@@ -384,8 +410,9 @@ $("#all-domains").click(function() {
     // Switch active buttons, disable input, hide other sites
     $('#single-domain').removeClass('active');
     $(this).addClass('active');
-    $('.custom-combobox input').prop('disabled', true);
-    $('#other-sites-container').hide();
+    $('.custom-combobox input').val(''); // Empty input
+    $('.custom-combobox input').prop('disabled', true); // Disable input
+    $('#other-sites-container').hide(); // Hide "other sites" table
     
     currDomain = 'All Domains';
     mapChange();
