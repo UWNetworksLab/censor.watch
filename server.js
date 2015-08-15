@@ -143,6 +143,7 @@ function chart_for_domain_helper(timestamp, domain, country, data, series) {
     if (domain in data) {
 	var domain_data = data[domain];
 	if (country) {
+	    // Perform for single country
 	    if (country in domain_data) {
 		var origin_data = domain_data[country];
 		series = resolved_country_sum_helper(origin_data, timestamp, series);
@@ -160,7 +161,6 @@ function chart_for_domain_helper(timestamp, domain, country, data, series) {
 
 // Helper for chart_for_domain_helper
 function resolved_country_sum_helper(origin_data, timestamp, series) {
-    // Perform for single country
     for (var resolved_country in origin_data) {
 	if (resolved_country !== "undefined") {
 	    if (!series[resolved_country]) {
@@ -178,6 +178,48 @@ function resolved_country_sum_helper(origin_data, timestamp, series) {
     }
     return series;
 }
+
+// Fetch aggregate data for the total # of resolutions per-country (shown in tooltips)
+app.get('/api/total_resolution_stats/:date', function(req, res) {
+    var filename = "cntry-cntry.json";
+    var date = req.params.date;
+    var ret = {};
+    if (date in files && filename in files[date]) {
+	var data = files[date][filename];
+	// Aggregate across all domains
+	for (var domain_i in data) {
+	    var domain_data = data[domain_i];
+	    var max_res = -1;  // Maximum resolutions (use to find primary resolution for domain)
+	    var max_res_country = '';
+	    var domain_res = {};
+	    // Perform for all countries of origin
+	    for (var origin_country in domain_data) {
+		var origin_data = domain_data[origin_country];
+		for (var resolved_country in origin_data) {
+		    if (resolved_country !== "undefined") {
+			domain_res[resolved_country] = 1;
+			var res_val = origin_data[resolved_country];
+			if (res_val > max_res) {
+			    max_res = res_val;
+			    max_res_country = resolved_country;
+			}
+		    }
+		}
+	    }
+	    // Iterate over aggregated per-domain resolution & add to total
+	    for (var country in domain_res) {
+		if (!ret[country]) {
+		    ret[country] = { primary_resolutions: 0, total_resolutions: 0 };
+		}
+		ret[country].total_resolutions += 1;
+	    }
+	    if (max_res_country !== '') {
+		ret[max_res_country].primary_resolutions += 1;
+	    }
+	}
+    }
+    res.json(ret);
+});
 
 // Get country->country data (from cntry-cntry.json) for domain for date
 // 'all' domain will be interpreted as aggregating across all domains

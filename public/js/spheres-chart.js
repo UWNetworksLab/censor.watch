@@ -2,6 +2,7 @@
 var currCountry = '',
     currDomain = 'www.dhl.com',
     country_code_map = {},
+    resolution_stats = {},  // Mapping of country->resolution stats
     country_to_country,  // Currently loaded country->country clustering data
     date = "06-29-2015";
 
@@ -103,6 +104,11 @@ function mapChange() {
         $("#chart-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
     }
 
+    // Fetch resolution stats for date
+    $.get( "/api/total_resolution_stats/" + date, function( data ) {
+	resolution_stats = data;
+    });
+
     // Fetch data for the current domain on the current date
     $.get( "/api/countries_by_domain/" + currDomain + "/" + date, function( data ) {
 	country_to_country = data;
@@ -176,6 +182,7 @@ function mapReady() {
 	match;
 
     // Update info box download links
+    /*
     $("#download").html(
         '<a class="button" target="_blank" href="http://jsfiddle.net/gh/get/jquery/1.11.0/' +
             'highslide-software/highcharts.com/tree/master/samples/mapdata/' + mapKey + '">' +
@@ -185,6 +192,7 @@ function mapReady() {
             '<a target="_blank" href="' + geojsonPath + '">GeoJSON</a>, ' +
             '<a target="_blank" href="' + javascriptPath + '">JavaScript</a>.</div>'
     );
+    */
 
     // Fetch data for the current domain & country for the timeseries chart
     $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) { chartChange( data ) } );
@@ -217,9 +225,9 @@ function mapReady() {
     }
 
     // Put formatted data into map series array
-    var currCountryVal = null;
+    var currCountryVal = 0;
     $.each(country_code_map, function(country, countryName) {
-	var value = null;
+	var value = 0;
 	var countryUpper = country.toUpperCase();
 	if (countryUpper in aggregated_data) {
 	    value = aggregated_data[countryUpper];
@@ -227,32 +235,19 @@ function mapReady() {
 	if (country === currCountry) {
 	    currCountryVal = value;
 	} else {
-	    if (value === null) {
-		data.push({
-		    key: country,
-		    value: 0
-		});
-	    } else {
-		data.push({
-		    key: country,
-		    value: value
-		});
-	    }
+	    data.push({
+		key: country,
+		value: value
+	    });
 	}
     });
-    if (currCountryVal === null) {
-	data.push({
-	    key: currCountry,
-	    value: 0,
-	    borderColor: '#ED1C24'
-	});
-    } else {
-	data.push({
-	    key: currCountry,
-	    value: currCountryVal,
-	    borderColor: '#ED1C24'
-	});
-    }
+    // Always put the current country on the end
+    // (otherwise I think it screws with the red outline)
+    data.push({
+	key: currCountry,
+	value: currCountryVal,
+	borderColor: '#ED1C24'
+    });
 
     var seriesName = "All Countries";
     if (currCountry != "") {
@@ -261,30 +256,55 @@ function mapReady() {
     
     // Instantiate chart
     $("#map-container").highcharts('Map', {
-
         title: {
             text: "Resolutions for " + currDomain + " in " + seriesName + " on " + date
         },
-
         mapNavigation: {
             enabled: true
         },
-
         colorAxis: {
             min: 0,
+	    labels: {
+		formatter: function() {
+		    if (this.value === this.axis.min) {
+			return "Fewest";
+		    } else if (this.value === this.axis.max) {
+			return "Most";
+		    }
+		}
+	    },
             stops: [
                 [0, '#EFEFFF'],
                 [0.5, Highcharts.getOptions().colors[0]],
                 [1, Highcharts.Color(Highcharts.getOptions().colors[0]).brighten(-0.5).get()]
             ]
         },
-
         legend: {
             layout: 'vertical',
             align: 'left',
             verticalAlign: 'bottom'
         },
-
+	tooltip: {
+            formatter: function() {
+		// Display the aggregate domain resolution statistics in the map tooltips
+		var series = this.series;
+		var point = this.point;
+		var countryCodeCaps = point.key.toUpperCase();
+		var str = '<span style="color:' + series.color + '">' + point.name + '</span><br/>';
+		if (countryCodeCaps in resolution_stats) {
+		    var stats = resolution_stats[countryCodeCaps];
+		    var primary = stats.primary_resolutions;
+		    var total = stats.total_resolutions;
+		    var total_domains = 10000;  // assuming alexa top 10000
+		    var primary_percent = Highcharts.numberFormat(primary * 100 / total_domains, 2);
+		    var total_percent = Highcharts.numberFormat(total * 100 / total_domains, 2);
+		    str += '<b>Resolutions for all domains</b><br/>' + 
+		        '<b>Primary:</b> ' + primary + ' (' + primary_percent + '%)<br/>' +
+			'<b>Total:</b> ' + total + ' (' + total_percent + '%)<br/>';
+		}
+		return str;
+	    }
+        },
         series: [{
             data: data,
             mapData: mapGeoJSON,
@@ -330,8 +350,13 @@ function mapReady() {
 // When a new time series chart is ready to load
 function chartChange(data) {
     var country = 'All Countries';
-    if (currCountry != '') {
+    if (currCountry !== '') {
 	country = country_code_map[currCountry];
+    }
+
+    var height = 400;
+    if (currDomain === 'All Domains') {
+	height = 600; // Extra height for all domains view
     }
     
     var labels = [];
@@ -347,6 +372,9 @@ function chartChange(data) {
     }
     
     $('#chart-container').highcharts({
+	chart: {
+	    height: height
+	},
         title: {
             text: "Click a day below to view on the map"
         },
