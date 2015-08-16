@@ -290,7 +290,8 @@ function mapReady() {
 		var series = this.series;
 		var point = this.point;
 		var countryCodeCaps = point.key.toUpperCase();
-		var str = '<span style="color:' + series.color + '">' + point.name + '</span><br/>';
+		var color = Highcharts.Color(Highcharts.getOptions().colors[0]).brighten(-0.5).get();
+		var str = '<span style="color:' + color + '">' + point.name + '</span><br/>';
 		if (countryCodeCaps in resolution_stats) {
 		    var stats = resolution_stats[countryCodeCaps];
 		    var primary = stats.primary_resolutions;
@@ -299,8 +300,8 @@ function mapReady() {
 		    var primary_percent = Highcharts.numberFormat(primary * 100 / total_domains, 2);
 		    var total_percent = Highcharts.numberFormat(total * 100 / total_domains, 2);
 		    str += '<b>Resolutions for all domains</b><br/>' + 
-		        '<b>Primary:</b> ' + primary + ' (' + primary_percent + '%)<br/>' +
-			'<b>Total:</b> ' + total + ' (' + total_percent + '%)<br/>';
+		        '<b>Primary:</b> ' + primary + ' (' + primary_percent + '% of total)<br/>' +
+			'<b>Total:</b> ' + total + ' (' + total_percent + '% of total)<br/>';
 		}
 		return str;
 	    }
@@ -370,13 +371,39 @@ function chartChange(data) {
 	    }
 	});
     }
+
+    // Put flag series on top of chart to make day selection easier
+    if (data.length > 0) {
+	data[0].id = "top";
+	var days = data[0].data;
+	var flagsData = [];
+	for (var i = 0; i < days.length; i++) {
+	    var timestamp = days[i][0];
+	    flagsData.push({
+		x: timestamp,
+		title: '▼'
+	    });
+	}
+	data.push({
+	    type: 'flags',
+	    data: flagsData,
+	    shape: 'squarepin',
+	    onSeries: 'top',
+	    showInLegend: false,
+	    tooltip: {
+		pointFormat: ''
+	    },
+	    width: 16
+	});
+    }
     
     $('#chart-container').highcharts({
 	chart: {
 	    height: height
 	},
         title: {
-            text: "Click a day below to view on the map"
+            text: "Click a day below to view on the map",
+	    margin: 30
         },
 	labels: {
 	    items: labels

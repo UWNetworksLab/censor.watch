@@ -10,8 +10,8 @@
     
     <!-- Highmaps/charts Includes -->
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-    <!--<script src="http://code.highcharts.com/maps/highmaps.js"></script>-->
-    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <!--<script src="http://code.highcharts.com/highcharts.js"></script>-->
+    <script src="http://code.highcharts.com/stock/highstock.js"></script>
     <script src="http://code.highcharts.com/maps/modules/map.js"></script>
     <script src="http://code.highcharts.com/mapdata/index.js?1"></script>
     <script src="http://code.highcharts.com/highcharts-more.js"></script>
@@ -27,15 +27,9 @@
     <!--[if lt IE 9]>
 	<script src="../bower_components/html5shiv/dist/html5shiv.js"></script>
 	<script src="../bower_components/respond/dest/respond.min.js"></script>
-	<![endif]-->
+    <![endif]-->
 
     <script src="./js/bootstrap.min.js"></script>
-
-    <style media="screen" type="text/css">
-      tbody > tr > td.country-label {
-        padding-top: 14px;
-	}
-    </style>
 
     <!-- Google Analytics -->
     <script>
@@ -47,13 +41,20 @@
       ga('create', 'UA-471290-13', 'auto');
       ga('send', 'pageview');
     </script>
+
+    <style>
+      td { cursor: pointer; cursor: hand; }
+      tbody > tr > td.country-label { padding-top: 14px; }
+      .ui-helper-hidden-accessible { position: absolute; left:-999em; }
+      a#header-logo { background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; height: 22px;background-position: 50% 100%; margin-right: 10px; }
+    </style>
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
           <!--<a href="../" class="navbar-brand">CensorWatch</a>-->
-	  <a href="../" class="navbar-brand" style="background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; height: 22px;background-position: 50% 100%; margin-right: 10px;"></a>
+	  <a href="../" class="navbar-brand" id="header-logo"></a>
           <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -61,18 +62,13 @@
           </button>
         </div>
         <div class="navbar-collapse collapse" id="navbar-main">
+	  <!--
           <ul class="nav navbar-nav">
-            <li>
-              <a href="#">Lorem</a>
+            <li class="active">
+	      <a href="#">Explore</a>
             </li>
-            <li>
-              <a href="#">Ipsum</a>
-            </li>
-	    <li>
-              <a href="#">Help</a>
-            </li>
-	    
           </ul>
+	  -->
 
           <ul class="nav navbar-nav navbar-right">
             <li><a href="#">About Us</a></li>
@@ -180,9 +176,6 @@
     </div>
     
     <!-- Highmaps -->
-    <style>
-      .ui-helper-hidden-accessible { position: absolute; left:-999em; }
-    </style>
     <script src="./js/spheres-chart.js"></script>
   </body>
 </html>

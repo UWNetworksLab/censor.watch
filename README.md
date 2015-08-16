@@ -10,6 +10,12 @@ npm install
 
 node server.js
 
+### Flags
+
+- --hostname (required) - Hostname of server (i.e. localhost)
+- --port (required) - Port of server (i.e. 8080)
+- --disablessl (optional) - Disables automatic redirect to https
+
 ## License
 
 TODO
