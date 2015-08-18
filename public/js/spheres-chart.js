@@ -2,13 +2,15 @@
 var currCountry = '',
     currDomain = 'www.dhl.com',
     country_code_map = {},
-    resolution_stats = {},  // Mapping of country->resolution stats
-    country_to_country,  // Currently loaded country->country clustering data
+    resolution_stats = {}, // Mapping of country->resolution stats
+    country_to_country, // Currently loaded country->country clustering data
+    daily_resolutions = {}, // Resolutions for the current country/day/domain
+    total_resolutions = -1, // Total resolutions in all countries for the current country/day/domain
     date = "06-29-2015";
 
 // Immutable variables
 var baseMapPath = "http://code.highcharts.com/mapdata/",
-    defaultDomain = 'www.dhl.com',  // Default domain to show on initial render
+    defaultDomain = 'www.dhl.com', // Default domain to show on page load
     showDataLabels = false, // Switch for data labels enabled/disabled
     map = "custom/world.js",
     mapDesc = "World",
@@ -112,7 +114,7 @@ function mapChange() {
     // Fetch data for the current domain on the current date
     $.get( "/api/countries_by_domain/" + currDomain + "/" + date, function( data ) {
 	country_to_country = data;
-	    
+	
         // Check whether the map is already loaded, else load it and
         // then show it async
         if (Highcharts.maps[mapKey]) {
@@ -195,7 +197,10 @@ function mapReady() {
     */
 
     // Fetch data for the current domain & country for the timeseries chart
-    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) { chartChange( data ) } );
+    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) {
+	chart_data = data;
+	chartChange(data);
+    });
 
     // Load data for the currently selected country
     var aggregated_data = {};
@@ -226,6 +231,7 @@ function mapReady() {
 
     // Put formatted data into map series array
     var currCountryVal = 0;
+    var sum = 0;
     $.each(country_code_map, function(country, countryName) {
 	var value = 0;
 	var countryUpper = country.toUpperCase();
@@ -240,7 +246,12 @@ function mapReady() {
 		value: value
 	    });
 	}
+	sum += value;
     });
+
+    daily_resolutions = aggregated_data; // set map of country->resolutions
+    total_resolutions = sum; // set total resolutions sum
+    
     // Always put the current country on the end
     // (otherwise I think it screws with the red outline)
     data.push({
@@ -292,17 +303,34 @@ function mapReady() {
 		var countryCodeCaps = point.key.toUpperCase();
 		var color = Highcharts.Color(Highcharts.getOptions().colors[0]).brighten(-0.5).get();
 		var str = '<span style="color:' + color + '">' + point.name + '</span><br/>';
+		
+		// Populate tooltip for current domain
+		var res = 0;
+		if (countryCodeCaps in daily_resolutions) {
+		    res = daily_resolutions[countryCodeCaps];
+		}
+		var domain_percent = Highcharts.numberFormat(res * 100 / total_resolutions, 2);
+		var currCountryStr = 'All Countries';
+		if (currCountry !== '') {
+		    currCountryStr = country_code_map[currCountry];
+		}
+		str += '<b>' + domain_percent + '%</b><br/>';
+		
+		// Populate tooltip for all domains
+		var primary = 0;
+		var total = 0;
 		if (countryCodeCaps in resolution_stats) {
 		    var stats = resolution_stats[countryCodeCaps];
 		    var primary = stats.primary_resolutions;
 		    var total = stats.total_resolutions;
-		    var total_domains = 10000;  // assuming alexa top 10000
-		    var primary_percent = Highcharts.numberFormat(primary * 100 / total_domains, 2);
-		    var total_percent = Highcharts.numberFormat(total * 100 / total_domains, 2);
-		    str += '<b>Resolutions for all domains</b><br/>' + 
-		        '<b>Primary:</b> ' + primary + ' (' + primary_percent + '% of total)<br/>' +
-			'<b>Total:</b> ' + total + ' (' + total_percent + '% of total)<br/>';
 		}
+		var total_domains = 10000;  // assuming alexa top 10000
+		var primary_percent = Highcharts.numberFormat(primary * 100 / total_domains, 2);
+		var total_percent = Highcharts.numberFormat(total * 100 / total_domains, 2);
+		str += '—<br/>' +
+		    'Resolutions across all domains for the day<br/>' + 
+		    '<b>Primary resolution:</b> ' + primary + ' (' + primary_percent + '% of all domains)<br/>' +
+		    '<b>Any resolution:</b> ' + total + ' (' + total_percent + '% of all domains)<br/>';
 		return str;
 	    }
         },
