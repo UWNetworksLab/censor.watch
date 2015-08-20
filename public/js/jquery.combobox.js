@@ -24,7 +24,7 @@
 				.autocomplete({
 					autoFocus: true,
 					delay: 0,
-					minLength: 0,
+					minLength: 6,
 					source: $.proxy(this, "_source")
 				})
 				.tooltip({

@@ -1,16 +1,33 @@
-// Mutable variables
-var currCountry = '',
-    currDomain = 'www.dhl.com',
+// Parse GET parameters
+function parseParam(val) {
+    var result = '',
+        tmp = [];
+    var items = location.search.substr(1).split("&");
+    for (var index = 0; index < items.length; index++) {
+        tmp = items[index].split("=");
+        if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+    }
+    return result;
+}
+
+var countryParam = parseParam('c'),
+    domainParam = parseParam('url'),
+    dateParam = parseParam('date');
+
+var defaultDomain = (domainParam !== '') ? domainParam : 'www.dhl.com'; // Default fallback domain
+
+// Mutable global state variable
+var currCountry = countryParam,
+    currDomain = (domainParam !== '') ? domainParam : defaultDomain,
+    date = (dateParam !== '') ? dateParam : '06-29-2015',
     country_code_map = {},
     resolution_stats = {}, // Mapping of country->resolution stats
     country_to_country, // Currently loaded country->country clustering data
     daily_resolutions = {}, // Resolutions for the current country/day/domain
-    total_resolutions = -1, // Total resolutions in all countries for the current country/day/domain
-    date = "06-29-2015";
+    total_resolutions = -1; // Total resolutions in all countries for the current country/day/domain
 
 // Immutable variables
 var baseMapPath = "http://code.highcharts.com/mapdata/",
-    defaultDomain = 'www.dhl.com', // Default domain to show on page load
     showDataLabels = false, // Switch for data labels enabled/disabled
     map = "custom/world.js",
     mapDesc = "World",
@@ -45,7 +62,7 @@ $(function () {
 		$(this).removeClass("info");
 	    });
 	    $(this).parent().addClass("info");
-	    mapReady();
+	    mapReady(true);
 	});
 	
 	country_code_map_loaded();
@@ -67,43 +84,33 @@ function country_code_map_loaded() {
 	searchText = 'Search ' + domainCount + ' domains';
 	$("#mapDropdown").append(mapOptions).combobox();
 	
-	// Trigger change event to load map on startup	
-	if (location.hash) {
-            $('#mapDropdown').val(location.hash.substr(1) + '.js');
-	} else { // for IE9
-            // $($('#mapDropdown option')[0]).attr('selected', 'selected');
-	    $('#mapDropdown option[value="' + defaultDomain + '"]').attr('selected', 'selected');
-	}
-	
 	// Change map when item selected in dropdown
 	$('#mapDropdown').change(function() {
 	    var domain = $("option:selected", this).text();
 	    currDomain = domain;
-	    mapChange();
+	    mapChange(true);
 	});
 
+	// Trigger change event to load domain
+	$('#mapDropdown').val(currDomain);
 	$('#mapDropdown').change();
     });
-
-    // Toggle data labels - Note: Reloads map with new random data
-    /*
-    $("#chkDataLabels").change(function () {
-        showDataLabels = $("#chkDataLabels").attr('checked');
-        $("#mapDropdown").change();
-    });
-    */
 }
 
 // When map to load has changed
-function mapChange() {
-    // Show loading
+// reload_chart = true if loading a different domain/country
+// reload_chart = false if loading a different day (i.e. from chart)
+function mapChange(reload_chart) {
+    // Show loading spinner for map
     if ($("#map-container").highcharts()) {
         $("#map-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
     }
-
-    // Show loading for chart
-    if ($("#chart-container").highcharts()) {
-        $("#chart-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
+    
+    if (reload_chart) {
+	// Show loading spinner for chart
+	if ($("#chart-container").highcharts()) {
+            $("#chart-container").highcharts().showLoading('<i class="fa fa-spinner fa-spin fa-2x"></i>');
+	}
     }
 
     // Fetch resolution stats for date
@@ -118,9 +125,9 @@ function mapChange() {
         // Check whether the map is already loaded, else load it and
         // then show it async
         if (Highcharts.maps[mapKey]) {
-	    mapReady();
+	    mapReady(reload_chart);
         } else {
-	    $.getScript(javascriptPath, mapReady);
+	    $.getScript(javascriptPath, function() { mapReady(reload_chart) });
         }
     });
 
@@ -177,30 +184,20 @@ function mapChange() {
 }
 
 // When the map is loaded or ready from cache...
-function mapReady() {
+// reload_chart = true if loading a different domain/country
+// reload_chart = false if loading a different day (i.e. from chart)
+function mapReady(reload_chart) {
     var mapGeoJSON = Highcharts.maps[mapKey],
 	data = [],
 	parent,
 	match;
 
-    // Update info box download links
-    /*
-    $("#download").html(
-        '<a class="button" target="_blank" href="http://jsfiddle.net/gh/get/jquery/1.11.0/' +
-            'highslide-software/highcharts.com/tree/master/samples/mapdata/' + mapKey + '">' +
-            'View clean demo</a>' +
-            '<div class="or-view-as">... or view as ' +
-            '<a target="_blank" href="' + svgPath + '">SVG</a>, ' +
-            '<a target="_blank" href="' + geojsonPath + '">GeoJSON</a>, ' +
-            '<a target="_blank" href="' + javascriptPath + '">JavaScript</a>.</div>'
-    );
-    */
-
-    // Fetch data for the current domain & country for the timeseries chart
-    $.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) {
-	chart_data = data;
-	chartChange(data);
-    });
+    if (reload_chart) {
+	// Fetch data for the current domain & country for the timeseries chart
+	$.get( "/api/chart_for_domain/" + currDomain + "?country=" + currCountry.toUpperCase(), function (data) {
+	    chartChange(data);
+	});
+    }
 
     // Load data for the currently selected country
     var aggregated_data = {};
@@ -359,7 +356,7 @@ function mapReady() {
 			$(".country-label[data-country='" + currCountry + "']").parent().removeClass("info");
 			currCountry = this.key;
 			$(".country-label[data-country='" + currCountry + "']").parent().addClass("info");
-			mapChange();
+			mapChange(true);
 		    }
                 }
             }
@@ -441,13 +438,13 @@ function chartChange(data) {
         },
         yAxis: {
             title: {
-                text: 'Percent of total'
+                text: '% of total resolutions'
             },
 	    min: 0,
 	    max: 100
         },
         tooltip: {
-            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.percentage:.1f}%</b> ({point.y:,.2f})<br/>',
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.percentage:.1f}%</b><br/>',
             shared: true
         },
         plotOptions: {
@@ -466,9 +463,10 @@ function chartChange(data) {
 		    click: function(event) {
 			var x = event.point.x;
 			date = $.datepicker.formatDate('mm-dd-yy', new Date(x));
-			mapChange();
+			mapChange(false);
 		    }
-		}
+		},
+		trackByArea: true
 	    }
         },
         series: data
@@ -498,5 +496,12 @@ $("#all-domains").click(function() {
     $('#other-sites-container').hide(); // Hide "other sites" table
     
     currDomain = 'All Domains';
-    mapChange();
+    mapChange(true);
 });
+
+// Add handler for generating permalink
+function generateLink() {
+    var link = window.location.host + "?" + "c=" + currCountry + "&url=" + currDomain + "&date=" + date;
+    $('#modal-url').val(link);
+    $("#permalink-modal").modal('show');
+}
