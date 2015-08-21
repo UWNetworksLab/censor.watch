@@ -88,6 +88,8 @@ dataFiles.forEach(function(file) {
 //
 // routes
 //
+
+// Get ISO 3166-1 alpha-2 code -> country name mapping
 app.get('/api/country_code_map', function(req, res) {
     var filename = "country_code_map.json";
     if (filename in files) {
@@ -99,12 +101,14 @@ app.get('/api/country_code_map', function(req, res) {
 });
 
 // List all days for which we have data
+// Not currently used.
 app.get('/api/list_all_days', function(req, res) {
     res.json(days);
 });
 
-// Fetch aggregate data for chart for domain for country
-// Country is optional: if missing, will return for All Countries
+// Returns aggregated resolutions for all countries on a per-day basis
+// in a highcharts-friendly timeseries format for the UI's chart.
+// Country is optional: if missing, will aggregate across all countries of origin
 app.get('/api/chart_for_domain/:domain', function(req, res) {
     var domain = req.params.domain;
     var country = req.query.country;
@@ -116,7 +120,7 @@ app.get('/api/chart_for_domain/:domain', function(req, res) {
 	var timestamp = Math.floor(new Date(date));
 	if (date in files && filename in files[date]) {
 	    var data = files[date][filename];
-	    if (domain === "All Domains") {
+	    if (domain === "all") {
 		// Aggregate across all domains
 		for (var domain_i in data) {
 		    series = chart_for_domain_helper(timestamp, domain_i, country, data, series);
@@ -229,9 +233,9 @@ app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     var filename = "cntry-cntry.json";
     if (date in files && filename in files[date]) {
 	var data = files[date][filename];
-	if (domain === 'All Domains') {
+	if (domain === 'all') {
 	    var ret = {};
-	    // Empty domain implies aggregating all domains
+	    // aggregating all domains
 	    for (var domain_i in data) {
 		var domain_data = data[domain_i];
 		for (var from_country in domain_data) {
@@ -260,6 +264,8 @@ app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     }
 });
 
+// List all domains that we have data for on the given date
+// This is used to populate the search autocomplete on the UI
 app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
@@ -276,6 +282,8 @@ app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     }
 });
 
+// Get all similarly responding domains according to cluster.json
+// This data is currently shown on the UI below the charts
 app.get('/api/similar_domains/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
@@ -301,15 +309,6 @@ app.get('/api/similar_domains/:domain/:date', function(req, res) {
 	res.json([]);
     }
 });
-
-//
-// application
-//
-/*
-app.get('*', function(req, res) {
-    res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
-});
-*/
 
 //
 // listen (start app with node server.js)

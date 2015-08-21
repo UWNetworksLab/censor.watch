@@ -65,25 +65,24 @@
       td { cursor: pointer; cursor: hand; }
       tbody > tr > td.country-label { padding-top: 14px; }
       .ui-helper-hidden-accessible { position: absolute; left:-999em; }
-      a#header-logo { background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; height: 22px;background-position: 50% 100%; margin-right: 10px; }
+      a#header-logo { background-image: url('./images/logo.png'); background-repeat: no-repeat; width: 200px; background-position: 0% 50%; margin-right: 10px; }
     </style>
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <!--<a href="../" class="navbar-brand">CensorWatch</a>-->
 	  <a href="../" class="navbar-brand" id="header-logo"></a>
         </div>
-	<div class="collapse navbar-collapse">
+	<div>
 	  <ul class="nav navbar-nav">
 	    <form class="navbar-form navbar-left" role="search">
 	      <div class="form-group">
 		<select id="mapDropdown" class="ui-widget combobox"></select>
 	      </div>
 	    </form>
-	    <li id="single-domain" class="active"><a href="#">Single Domain</a></li>
-	    <li id="all-domains"><a href="#">All Domains</a></li>
+	    <li id="single-domain" class="active"><a href="#" onclick="singleDomainClick();">Single Domain</a></li>
+	    <li id="all-domains"><a href="#" onclick="allDomainsClick();">All Domains</a></li>
 	  </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a href="./about.html">About Us</a></li>
@@ -130,8 +129,8 @@
       </div>
       
       <!-- Highchart -->
-      <div class="col-lg-12" style="height:400px;">
-	<div id="chart-container"></div>
+      <div class="col-lg-12">
+	<div id="chart-container" style="height:400px;"></div>
       </div>
       
       <div class="col-lg-12" id="other-sites-container">

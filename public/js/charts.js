@@ -1,6 +1,6 @@
 // Parse GET parameters
 function parseParam(val) {
-    var result = '',
+    var result = null,
         tmp = [];
     var items = location.search.substr(1).split("&");
     for (var index = 0; index < items.length; index++) {
@@ -14,12 +14,12 @@ var countryParam = parseParam('c'),
     domainParam = parseParam('url'),
     dateParam = parseParam('date');
 
-var defaultDomain = (domainParam !== '') ? domainParam : 'www.dhl.com'; // Default fallback domain
+var defaultDomain = (domainParam !== null && domainParam !== 'all') ? domainParam : 'www.dhl.com'; // Default fallback domain
 
 // Mutable global state variable
-var currCountry = countryParam,
-    currDomain = (domainParam !== '') ? domainParam : defaultDomain,
-    date = (dateParam !== '') ? dateParam : '06-29-2015',
+var currCountry = (countryParam !== null) ? countryParam : '',
+    currDomain = (domainParam !== null) ? domainParam : defaultDomain,
+    date = (dateParam !== null) ? dateParam : '06-29-2015',
     country_code_map = {},
     resolution_stats = {}, // Mapping of country->resolution stats
     country_to_country, // Currently loaded country->country clustering data
@@ -92,8 +92,12 @@ function country_code_map_loaded() {
 	});
 
 	// Trigger change event to load domain
-	$('#mapDropdown').val(currDomain);
-	$('#mapDropdown').change();
+	if (currDomain === 'all') {
+	    allDomainsClick();
+	} else {
+	    $('#mapDropdown').val(currDomain);
+	    $('#mapDropdown').change();
+	}
     });
 }
 
@@ -257,15 +261,13 @@ function mapReady(reload_chart) {
 	borderColor: '#ED1C24'
     });
 
-    var seriesName = "All Countries";
-    if (currCountry != "") {
-	seriesName = country_code_map[currCountry];
-    }
+    var seriesName = (currCountry === '') ? 'All Countries' : country_code_map[currCountry];
+    var domainName = (currDomain === 'all') ? 'All Domains' : currDomain;
     
     // Instantiate chart
-    $("#map-container").highcharts('Map', {
+    $('#map-container').highcharts('Map', {
         title: {
-            text: "Resolutions for " + currDomain + " in " + seriesName + " on " + date
+            text: 'Resolutions for ' + domainName + ' in ' + seriesName + ' on ' + date
         },
         mapNavigation: {
             enabled: true
@@ -275,9 +277,9 @@ function mapReady(reload_chart) {
 	    labels: {
 		formatter: function() {
 		    if (this.value === this.axis.min) {
-			return "Fewest";
+			return 'Fewest';
 		    } else if (this.value === this.axis.max) {
-			return "Most";
+			return 'Most';
 		    }
 		}
 	    },
@@ -307,10 +309,7 @@ function mapReady(reload_chart) {
 		    res = daily_resolutions[countryCodeCaps];
 		}
 		var domain_percent = Highcharts.numberFormat(res * 100 / total_resolutions, 2);
-		var currCountryStr = 'All Countries';
-		if (currCountry !== '') {
-		    currCountryStr = country_code_map[currCountry];
-		}
+		var currCountryStr = (currCountry === '') ? 'All Countries' : country_code_map[currCountry];
 		str += '<b>' + domain_percent + '%</b><br/>';
 		
 		// Populate tooltip for all domains
@@ -375,15 +374,9 @@ function mapReady(reload_chart) {
 
 // When a new time series chart is ready to load
 function chartChange(data) {
-    var country = 'All Countries';
-    if (currCountry !== '') {
-	country = country_code_map[currCountry];
-    }
-
-    var height = 400;
-    if (currDomain === 'All Domains') {
-	height = 600; // Extra height for all domains view
-    }
+    var country = (currCountry === '') ? 'All Countries' : country_code_map[currCountry];
+    var height = (currDomain === 'all') ? 600 : 400; // Extra height for all domains view
+    $('#chart-container').height(height); // Ensure footer is positioned correctly w.r.t. container
     
     var labels = [];
     if (jQuery.isEmptyObject(data)) {
@@ -473,31 +466,31 @@ function chartChange(data) {
     });
 }
 
-// Add click handler for "Single Domain" button
-$("#single-domain").click(function() {
+// Event triggered when selecting "single domain" option
+function singleDomainClick() {
     // Switch active buttons, enable input, show other sites
     $('#all-domains').removeClass('active');
-    $(this).addClass('active');
+    $('#single-domain').addClass('active');
     $('.custom-combobox input').prop('disabled', false); // Enable input
     $('#other-sites-container').show(); // Show "other sites" table
     
     currDomain = defaultDomain;
     $('#mapDropdown').val(currDomain);
     $('#mapDropdown').change();
-});
+}
 
-// Add click handler for "All Domains" button
-$("#all-domains").click(function() {
+// Event triggered when selecting "all domaisn" option
+function allDomainsClick() {
     // Switch active buttons, disable input, hide other sites
     $('#single-domain').removeClass('active');
-    $(this).addClass('active');
+    $('#all-domains').addClass('active');
     $('.custom-combobox input').val(''); // Empty input
     $('.custom-combobox input').prop('disabled', true); // Disable input
     $('#other-sites-container').hide(); // Hide "other sites" table
     
-    currDomain = 'All Domains';
+    currDomain = 'all';
     mapChange(true);
-});
+}
 
 // Add handler for generating permalink
 function generateLink() {
