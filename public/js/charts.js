@@ -118,7 +118,7 @@ function mapChange(reloadChart) {
     }
 
     // Fetch resolution stats for date
-    $.get( "/api/total_RESOLUTION_STATS/" + DATE, function( data ) {
+    $.get( "/api/total_resolution_stats/" + DATE, function( data ) {
 	RESOLUTION_STATS = data;
     });
 
