@@ -3,9 +3,11 @@
 //
 var express  = require('express');
 var app      = express();                   // create our app w/ express
-var morgan = require('morgan');             // log requests to the console (express4)
+var logger = require('morgan');             // log requests to the console (express4)
+var rotator = require('file-stream-rotator');
 var bodyParser = require('body-parser');    // pull information from HTML POST (express4)
 var argv = require('minimist')(process.argv.slice(2));
+var fs = require('fs');
 
 //
 // valid flags:
@@ -33,8 +35,21 @@ if (!argv.port && !argv.hostname) {
 //
 // configuration
 //
+app.disable('x-powered-by');
+
 app.use(express.static(__dirname + '/public'));                 // set the static files location /public/img will be /img for users
-app.use(morgan('dev'));                                         // log every request to the console
+
+var logdir = __dirname + '/access.log';
+fs.existsSync(logdir) || fs.mkdirSync(logdir);
+
+var accessLog = rotator.getStream({
+  filename: logdir + '/access-%DATE%.log',
+  frequency: 'daily',
+  verbose: false
+});
+
+app.use(logger(':req[X-Real-IP] :req[X-Forwarded-For] :req[CF-IPCountry] - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {stream: accessLog}));
+
 app.use(bodyParser.urlencoded({'extended':'true'}));            // parse application/x-www-form-urlencoded
 app.use(bodyParser.json());                                     // parse application/json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
