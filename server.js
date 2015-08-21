@@ -14,8 +14,6 @@ var argv = require('minimist')(process.argv.slice(2));
 // --port [port]
 // --hostname [hostname]
 //
-// optional:
-// --disablessl
 //
 var intRegex = /^\d+$/;
 if (!argv.port && !argv.hostname) {
@@ -30,13 +28,6 @@ if (!argv.port && !argv.hostname) {
 } else if (!intRegex.test(argv.port) || parseInt(argv.port) <= 0 || parseInt(argv.port) >= 65535) {
     console.error("ERROR: Invalid value for --port");
     process.exit(1);
-}
-
-if (!argv.disablessl) {
-    // set up a route to redirect http to https
-    app.get('*', function(req, res) {  
-	res.redirect('https://' + req.headers['host'] + req.url)
-    })
 }
 
 //
