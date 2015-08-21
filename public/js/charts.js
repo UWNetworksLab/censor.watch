@@ -27,7 +27,7 @@ var currCountry = (countryParam !== null) ? countryParam : '',
     total_resolutions = -1; // Total resolutions in all countries for the current country/day/domain
 
 // Immutable variables
-var baseMapPath = "http://code.highcharts.com/mapdata/",
+var baseMapPath = "https://code.highcharts.com/mapdata/",
     showDataLabels = false, // Switch for data labels enabled/disabled
     map = "custom/world.js",
     mapDesc = "World",
