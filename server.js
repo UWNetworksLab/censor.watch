@@ -35,7 +35,7 @@ if (!argv.port && !argv.hostname) {
 if (!argv.disablessl) {
     // set up a route to redirect http to https
     app.get('*', function(req, res) {  
-	res.redirect('https://' + req.headers['host'] + req.url)
+        res.redirect('https://' + req.headers['host'] + req.url)
     })
 }
 
@@ -54,8 +54,8 @@ app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse applica
 var fs = require('fs');
 var path = require('path');
 
-var files = {};
-var days = [];  // Sorted list of days for which we have satellite data
+var FILES = {};
+var DAYS = [];  // Sorted list of days for which we have satellite data
 var dataDir = "./data";
 
 console.log("Loading data files from " + dataDir);
@@ -65,26 +65,26 @@ dataFiles.forEach(function(file) {
     abs_file = path.resolve(dataDir, file);
     var stat = fs.statSync(abs_file);
     if (stat.isDirectory()) {
-	days.push(file);
-	files[file] = {};
-	// Recurse into each satellite run directory
-	var dailyPath = dataDir + '/' + file;
-	var dailyFiles = fs.readdirSync(dailyPath);
-	dailyFiles.forEach(function(dailyFile) {
-	    // Load run files into map, emulating directory structure
-	    abs_file = path.resolve(dailyPath, dailyFile);
-	    var data = fs.readFileSync(abs_file);
-	    files[file][dailyFile] = JSON.parse(data.toString());
-	    console.log("Loaded data file: " + file + '/' + dailyFile);
-	});
+        DAYS.push(file);
+        FILES[file] = {};
+        // Recurse into each satellite run directory
+        var dailyPath = dataDir + '/' + file;
+        var dailyFiles = fs.readdirSync(dailyPath);
+        dailyFiles.forEach(function(dailyFile) {
+            // Load run files into map, emulating directory structure
+            abs_file = path.resolve(dailyPath, dailyFile);
+            var data = fs.readFileSync(abs_file);
+            FILES[file][dailyFile] = JSON.parse(data.toString());
+            console.log("Loaded data file: " + file + '/' + dailyFile);
+        });
     } else {
-	// This is a non-satellite data file (top-level)
-	var data = fs.readFileSync(abs_file);
-	files[file] = JSON.parse(data.toString());
-	console.log("Loaded data file: " + file);
+        // This is a non-satellite data file (top-level)
+        var data = fs.readFileSync(abs_file);
+        FILES[file] = JSON.parse(data.toString());
+        console.log("Loaded data file: " + file);
     }
 });
-	   
+           
 //
 // routes
 //
@@ -92,18 +92,18 @@ dataFiles.forEach(function(file) {
 // Get ISO 3166-1 alpha-2 code -> country name mapping
 app.get('/api/country_code_map', function(req, res) {
     var filename = "country_code_map.json";
-    if (filename in files) {
-	var data = files[filename];
-	res.json(data);
+    if (filename in FILES) {
+        var data = FILES[filename];
+        res.json(data);
     } else {
-	res.json({});
+        res.json({});
     }
 });
 
 // List all days for which we have data
 // Not currently used.
 app.get('/api/list_all_days', function(req, res) {
-    res.json(days);
+    res.json(DAYS);
 });
 
 // Returns aggregated resolutions for all countries on a per-day basis
@@ -115,70 +115,70 @@ app.get('/api/chart_for_domain/:domain', function(req, res) {
     var filename = "cntry-cntry.json";
     var ret = [];
     var series = {};
-    for (var i in days) {
-	var date = days[i];
-	var timestamp = Math.floor(new Date(date));
-	if (date in files && filename in files[date]) {
-	    var data = files[date][filename];
-	    if (domain === "all") {
-		// Aggregate across all domains
-		for (var domain_i in data) {
-		    series = chart_for_domain_helper(timestamp, domain_i, country, data, series);
-		}
-	    } else {
-		// Single domain
-		series = chart_for_domain_helper(timestamp, domain, country, data, series);
-	    }
-	}
+    for (var i in DAYS) {
+        var date = DAYS[i];
+        var timestamp = Math.floor(new Date(date));
+        if (date in FILES && filename in FILES[date]) {
+            var data = FILES[date][filename];
+            if (domain === "all") {
+                // Aggregate across all domains
+                for (var domain_i in data) {
+                    series = chartForDomainHelper(timestamp, domain_i, country, data, series);
+                }
+            } else {
+                // Single domain
+                series = chartForDomainHelper(timestamp, domain, country, data, series);
+            }
+        }
     }
     // Construct series return array
     for (var country in series) {
-	ret.push({
-	    type: 'area',
-	    name: files["country_code_map.json"][country.toLowerCase()],
-	    data: series[country]
-	});
+        ret.push({
+            type: 'area',
+            name: FILES["country_code_map.json"][country.toLowerCase()],
+            data: series[country]
+        });
     }
     res.json(ret);
 });
 
 // Helper function for chart_for_domain endpoint
-function chart_for_domain_helper(timestamp, domain, country, data, series) {
+function chartForDomainHelper(timestamp, domain, country, data, series) {
     if (domain in data) {
-	var domain_data = data[domain];
-	if (country) {
-	    // Perform for single country
-	    if (country in domain_data) {
-		var origin_data = domain_data[country];
-		series = resolved_country_sum_helper(origin_data, timestamp, series);
-	    }
-	} else {
-	    // Perform for all countries
-	    for (var origin_country in domain_data) {
-		var origin_data = domain_data[origin_country];
-		series = resolved_country_sum_helper(origin_data, timestamp, series);
-	    }
-	}
+        var domainData = data[domain];
+        if (country) {
+            // Perform for single country
+            if (country in domainData) {
+                var originData = domainData[country];
+                series = resolvedCountrySumHelper(originData, timestamp, series);
+            }
+        } else {
+            // Perform for all countries
+            for (var originCountry in domainData) {
+                var originData = domainData[originCountry];
+                series = resolvedCountrySumHelper(originData, timestamp, series);
+            }
+        }
     }
     return series;
 }
 
 // Helper for chart_for_domain_helper
-function resolved_country_sum_helper(origin_data, timestamp, series) {
-    for (var resolved_country in origin_data) {
-	if (resolved_country !== "undefined") {
-	    if (!series[resolved_country]) {
-		series[resolved_country] = [];
-	    }
-	    // See if we've already have an entry for today (if so, sum to that)
-	    var len = series[resolved_country].length;
-	    var last_entry = series[resolved_country][len - 1];
-	    if (last_entry && last_entry[0] === timestamp) {
-		series[resolved_country][len - 1][1] += origin_data[resolved_country];
-	    } else {
-		series[resolved_country].push([timestamp, origin_data[resolved_country]]);
-	    }
-	}
+function resolvedCountrySumHelper(originData, timestamp, series) {
+    for (var resolvedCountry in originData) {
+        if (resolvedCountry !== "undefined") {
+            if (!series[resolvedCountry]) {
+                series[resolvedCountry] = [];
+            }
+            // See if we've already have an entry for today (if so, sum to that)
+            var len = series[resolvedCountry].length;
+            var lastEntry = series[resolvedCountry][len - 1];
+            if (lastEntry && lastEntry[0] === timestamp) {
+                series[resolvedCountry][len - 1][1] += originData[resolvedCountry];
+            } else {
+                series[resolvedCountry].push([timestamp, originData[resolvedCountry]]);
+            }
+        }
     }
     return series;
 }
@@ -188,39 +188,39 @@ app.get('/api/total_resolution_stats/:date', function(req, res) {
     var filename = "cntry-cntry.json";
     var date = req.params.date;
     var ret = {};
-    if (date in files && filename in files[date]) {
-	var data = files[date][filename];
-	// Aggregate across all domains
-	for (var domain_i in data) {
-	    var domain_data = data[domain_i];
-	    var max_res = -1;  // Maximum resolutions (use to find primary resolution for domain)
-	    var max_res_country = '';
-	    var domain_res = {};
-	    // Perform for all countries of origin
-	    for (var origin_country in domain_data) {
-		var origin_data = domain_data[origin_country];
-		for (var resolved_country in origin_data) {
-		    if (resolved_country !== "undefined") {
-			domain_res[resolved_country] = 1;
-			var res_val = origin_data[resolved_country];
-			if (res_val > max_res) {
-			    max_res = res_val;
-			    max_res_country = resolved_country;
-			}
-		    }
-		}
-	    }
-	    // Iterate over aggregated per-domain resolution & add to total
-	    for (var country in domain_res) {
-		if (!ret[country]) {
-		    ret[country] = { primary_resolutions: 0, total_resolutions: 0 };
-		}
-		ret[country].total_resolutions += 1;
-	    }
-	    if (max_res_country !== '') {
-		ret[max_res_country].primary_resolutions += 1;
-	    }
-	}
+    if (date in FILES && filename in FILES[date]) {
+        var data = FILES[date][filename];
+        // Aggregate across all domains
+        for (var domain_i in data) {
+            var domainData = data[domain_i];
+            var maxRes = -1;  // Maximum resolutions (use to find primary resolution for domain)
+            var maxResCountry = '';
+            var domainRes = {};
+            // Perform for all countries of origin
+            for (var originCountry in domainData) {
+                var originData = domainData[originCountry];
+                for (var resolvedCountry in originData) {
+                    if (resolvedCountry !== "undefined") {
+                        domainRes[resolvedCountry] = 1;
+                        var resVal = originData[resolvedCountry];
+                        if (resVal > maxRes) {
+                            maxRes = resVal;
+                            maxResCountry = resolvedCountry;
+                        }
+                    }
+                }
+            }
+            // Iterate over aggregated per-domain resolution & add to total
+            for (var country in domainRes) {
+                if (!ret[country]) {
+                    ret[country] = { primary_resolutions: 0, total_resolutions: 0 };
+                }
+                ret[country].total_resolutions += 1;
+            }
+            if (maxResCountry !== '') {
+                ret[maxResCountry].primary_resolutions += 1;
+            }
+        }
     }
     res.json(ret);
 });
@@ -231,36 +231,36 @@ app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
     var filename = "cntry-cntry.json";
-    if (date in files && filename in files[date]) {
-	var data = files[date][filename];
-	if (domain === 'all') {
-	    var ret = {};
-	    // aggregating all domains
-	    for (var domain_i in data) {
-		var domain_data = data[domain_i];
-		for (var from_country in domain_data) {
-		    if (!(from_country in ret)) {
-			ret[from_country] = {};
-		    }
-		    var from_country_data = domain_data[from_country];
-		    for (var to_country in from_country_data) {
-			if (!(to_country in ret[from_country])) {
-			    ret[from_country][to_country] = 0.0;
-			}
-			ret[from_country][to_country] += from_country_data[to_country];
-		    }
-		}
-	    }
-	    res.json(ret);
-	} else {
-	    if (domain in data) {
-		res.json(data[domain]);
-	    } else {
-		res.json({});
-	    }
-	}
+    if (date in FILES && filename in FILES[date]) {
+        var data = FILES[date][filename];
+        if (domain === 'all') {
+            var ret = {};
+            // aggregating all domains
+            for (var domain_i in data) {
+                var domainData = data[domain_i];
+                for (var fromCountry in domainData) {
+                    if (!(fromCountry in ret)) {
+                        ret[fromCountry] = {};
+                    }
+                    var fromCountryData = domainData[fromCountry];
+                    for (var toCountry in fromCountryData) {
+                        if (!(toCountry in ret[fromCountry])) {
+                            ret[fromCountry][toCountry] = 0.0;
+                        }
+                        ret[fromCountry][toCountry] += fromCountryData[toCountry];
+                    }
+                }
+            }
+            res.json(ret);
+        } else {
+            if (domain in data) {
+                res.json(data[domain]);
+            } else {
+                res.json({});
+            }
+        }
     } else {
-	res.json({});
+        res.json({});
     }
 });
 
@@ -270,15 +270,15 @@ app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
     var filename = "cntry-cntry.json";
-    if (date in files && filename in files[date]) {
-	var data = files[date][filename];
-	var domain_list = [];
-	for(var domain in data) {
-	    domain_list.push(domain);
-	}
-	res.json(domain_list);
+    if (date in FILES && filename in FILES[date]) {
+        var data = FILES[date][filename];
+        var domainList = [];
+        for(var domain in data) {
+            domainList.push(domain);
+        }
+        res.json(domainList);
     } else {
-	res.json([]);
+        res.json([]);
     }
 });
 
@@ -288,25 +288,25 @@ app.get('/api/similar_domains/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
     var filename = "clusters.json";
-    if (date in files && filename in files[date]) {
-	var data = files[date][filename];
-	var found = false;
-	for (var i = 0; i < data.length; i++) {
-	    var cluster = data[i];
-	    if (cluster != null) {
-		for (var j = 0; j < cluster.length; j++) {
-		    if (cluster[j] === domain) {
-			found = true;
-			res.json(cluster);
-		    }
-		}
-	    }
-	}
-	if (!found) {
-	    res.json([]);
-	}
+    if (date in FILES && filename in FILES[date]) {
+        var data = FILES[date][filename];
+        var found = false;
+        for (var i = 0; i < data.length; i++) {
+            var cluster = data[i];
+            if (cluster != null) {
+                for (var j = 0; j < cluster.length; j++) {
+                    if (cluster[j] === domain) {
+                        found = true;
+                        res.json(cluster);
+                    }
+                }
+            }
+        }
+        if (!found) {
+            res.json([]);
+        }
     } else {
-	res.json([]);
+        res.json([]);
     }
 });
 
@@ -315,3 +315,11 @@ app.get('/api/similar_domains/:domain/:date', function(req, res) {
 //
 app.listen(argv.port, argv.hostname);
 console.log("Server listening on " + argv.hostname + ":" + argv.port );
+
+//
+// error handling
+//
+process.on('uncaughtException', function(err) {
+    console.log(err);
+    process.exit(1);
+});

@@ -1,6 +1,6 @@
 {
   "name"         : "censor.watch",
-  "version"      : "0.0.1",
+  "version"      : "1.0.0",
   "description"  : "censor.watch website for Satellite visualizations",
   "main"         : "server.js",
   "author"       : "Luke Neilson",
