@@ -54,6 +54,12 @@ $(function () {
             var elementString = "<tr class='" + classString + "'>" + flagString + "<td class='country-label' data-country='" + countryCode + "'>" + friendlyCountryName + "</td></tr>";
             $("#country-table-body").append(elementString);
         });
+        
+        // Deselect all countries in sidebar, select the desired one
+        $('#country-table-body tr.info').each(function() {
+            $(this).removeClass('info');
+        });
+        $('td[data-country="' + CURR_COUNTRY + '"]').parent().addClass('info');
 
         // Add click handler for countries table
         $(".country-label").click(function() {
@@ -62,7 +68,7 @@ $(function () {
                 $(this).removeClass("info");
             });
             $(this).parent().addClass("info");
-	    historyPushState();
+            historyPushState();
             mapReady(true);
         });
         
@@ -397,31 +403,6 @@ function chartChange(data) {
             }
         });
     }
-
-    // Put flag series on top of chart to make day selection easier
-    if (data.length > 0) {
-        data[0].id = "top";
-        var days = data[0].data;
-        var flagsData = [];
-        for (var i = 0; i < days.length; i++) {
-            var timestamp = days[i][0];
-            flagsData.push({
-                x: timestamp,
-                title: '▼'
-            });
-        }
-        data.push({
-            type: 'flags',
-            data: flagsData,
-            shape: 'squarepin',
-            onSeries: 'top',
-            showInLegend: false,
-            tooltip: {
-                pointFormat: ''
-            },
-            width: 16
-        });
-    }
     
     $('#chart-container').highcharts({
         chart: {
@@ -429,7 +410,7 @@ function chartChange(data) {
         },
         title: {
             text: 'Click a day below to view on the map',
-            margin: 30
+            margin: 10
         },
         labels: {
             items: labels
@@ -445,7 +426,25 @@ function chartChange(data) {
             max: 100
         },
         tooltip: {
-            pointFormat: '<span style="color:{series.color}">▶</span> {series.name}: <b>{point.percentage:.1f}%</b> ({point.y:,.0f})<br/>',
+            formatter: function() {
+                var max = (CURR_DOMAIN === 'all') ? 40 : 20; // top 20 for single domain, 40 for all domains
+                var date = $.datepicker.formatDate('mm-dd-yy', new Date(this.x));
+                var s = '<strong>' + date + ' — Top ' + max + ' resolving countries</strong><br/>';
+
+                var sortedPoints = this.points.sort(function(a, b) {
+                    return ((a.y > b.y) ? -1 : ((a.y < b.y) ? 1 : 0));
+                });
+
+                $.each(sortedPoints , function(i, point) {
+                    if (i < max) {
+                        var percent = Highcharts.numberFormat(point.percentage, 1);
+                        var count = Highcharts.numberFormat(point.y, 0);
+                        s += '<span style="color:' + point.series.color + '">▶</span> ' + point.series.name + ': <b>' + percent + '%</b> (' + count + ')<br/>';
+                    }
+                });
+
+                return s;
+            },
             shared: true
         },
         legend: {
@@ -525,51 +524,53 @@ window.onpopstate = function(event) {
         CURR_DOMAIN = state.domain;
         DATE = state.date;
         if (state.domain === 'all') {
-	    // Switch active buttons, disable input, hide other sites
-	    $('#single-domain').removeClass('active');
-	    $('#all-domains').addClass('active');
-	    $('.custom-combobox input').val(''); // Empty input
-	    $('.custom-combobox input').prop('disabled', true); // Disable input
-	    $('#other-sites-container').hide(); // Hide "other sites" table
+            // Switch active buttons, disable input, hide other sites
+            $('#single-domain').removeClass('active');
+            $('#all-domains').addClass('active');
+            $('.custom-combobox input').val(''); // Empty input
+            $('.custom-combobox input').prop('disabled', true); // Disable input
+            $('#other-sites-container').hide(); // Hide "other sites" table
         } else {
-	    // Switch active buttons, enable input, show other sites
-	    $('#all-domains').removeClass('active');
-	    $('#single-domain').addClass('active');
-	    $('.custom-combobox input').prop('disabled', false); // Enable input
-	    $('#other-sites-container').show(); // Show "other sites" table
-	    $('#mapDropdown').val(CURR_DOMAIN);
-	    // Visually clear selections from all 4 tables & set our selection
+            // Switch active buttons, enable input, show other sites
+            $('#all-domains').removeClass('active');
+            $('#single-domain').addClass('active');
+            $('.custom-combobox input').prop('disabled', false); // Enable input
+            $('#other-sites-container').show(); // Show "other sites" table
+            $('#mapDropdown').val(CURR_DOMAIN);
+            $('input.custom-combobox-input').val(CURR_DOMAIN); // update input box text
+            
+            // Visually clear domain selection from all 4 tables & set our selection
             $('#domain-table-body-0 tr.info').each(function () {
                 $(this).removeClass('info');
-		if ($(this).attr('data-domain') === CURR_DOMAIN) {
-		    $(this).parent.addClass('info');
-		}
+                if ($(this).attr('data-domain') === CURR_DOMAIN) {
+                    $(this).parent.addClass('info');
+                }
             });
             $('#domain-table-body-1 tr.info').each(function () {
                 $(this).removeClass('info');
-		if ($(this).attr('data-domain') === CURR_DOMAIN) {
-		    $(this).parent.addClass('info');
-		}
+                if ($(this).attr('data-domain') === CURR_DOMAIN) {
+                    $(this).parent.addClass('info');
+                }
             });
             $('#domain-table-body-2 tr.info').each(function () {
                 $(this).removeClass('info');
-		if ($(this).attr('data-domain') === CURR_DOMAIN) {
-		    $(this).parent.addClass('info');
-		}
+                if ($(this).attr('data-domain') === CURR_DOMAIN) {
+                    $(this).parent.addClass('info');
+                }
             });
             $('#domain-table-body-3 tr.info').each(function () {
                 $(this).removeClass('info');
-		if ($(this).attr('data-domain') === CURR_DOMAIN) {
-		    $(this).parent.addClass('info');
-		}
+                if ($(this).attr('data-domain') === CURR_DOMAIN) {
+                    $(this).parent.addClass('info');
+                }
             });
         }
-	// Deselect all countries in sidebar, select the desired one
-	$('#country-table-body tr.info').each(function() {
+        // Deselect all countries in sidebar, select the desired one
+        $('#country-table-body tr.info').each(function() {
             $(this).removeClass('info');
         });
-	$('td[data-country="' + CURR_COUNTRY + '"]').parent().addClass('info');
-	
-	mapChangeHandler(true);
+        $('td[data-country="' + CURR_COUNTRY + '"]').parent().addClass('info');
+        
+        mapChangeHandler(true);
     }
 }

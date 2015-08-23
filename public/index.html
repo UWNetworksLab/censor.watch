@@ -41,11 +41,11 @@
 
     <!-- Flag sprites service provided by Martijn Lafeber, https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE -->
     <link rel="stylesheet" type="text/css" href="https://cloud.github.com/downloads/lafeber/world-flags-sprite/flags32.css" />
-    <link rel="stylesheet" href="./css/bootstrap.css" media="screen">
+    <link rel="stylesheet" href="./css/bootstrap.min.css" media="screen">
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
-	<script src="../bower_components/html5shiv/dist/html5shiv.js"></script>
-	<script src="../bower_components/respond/dest/respond.min.js"></script>
+        <script src="../bower_components/html5shiv/dist/html5shiv.js"></script>
+        <script src="../bower_components/respond/dest/respond.min.js"></script>
     <![endif]-->
 
     <script src="./js/bootstrap.min.js"></script>
@@ -72,25 +72,27 @@
     <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-	  <a href="../" class="navbar-brand" id="header-logo"></a>
+          <a href="../" class="navbar-brand" id="header-logo"></a>
         </div>
-	<div>
-	  <ul class="nav navbar-nav">
-	    <form class="navbar-form navbar-left" role="search">
-	      <div class="form-group">
-		<select id="mapDropdown" class="ui-widget combobox"></select>
-	      </div>
-	    </form>
-	    <li id="single-domain" class="active"><a href="#" onclick="singleDomainClick(true);">Single Domain</a></li>
-	    <li id="all-domains"><a href="#" onclick="allDomainsClick(true);">All Domains</a></li>
-	  </ul>
+        <div>
+          <ul class="nav navbar-nav">
+            <form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <select id="mapDropdown" class="ui-widget combobox"></select>
+              </div>
+            </form>
+            <li id="single-domain" class="active"><a href="#" onclick="singleDomainClick(true);">Single Domain</a></li>
+            <li id="all-domains"><a href="#" onclick="allDomainsClick(true);">All Domains</a></li>
+          </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a href="./about.html">About Us</a></li>
           </ul>
-	  <ul class="nav navbar-nav navbar-right">
-	    <li><a href="#" id="generate-link" onclick="generateLink();">Generate Link</a></li>
-	  </ul>
-	</div>
+          <!--
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#" id="generate-link" onclick="generateLink();">Generate Link</a></li>
+          </ul>
+          -->
+        </div>
       </div>
     </div>
 
@@ -107,58 +109,58 @@
       
       <!-- Highmap -->
       <div class="col-lg-9" style="height:400px;">
-	<div id="demo-wrapper">
-	  <div id="mapBox">
-	    <div id="up"></div>
-	    <div id="map-container"></div> 
-	  </div>
-	</div>
+        <div id="demo-wrapper">
+          <div id="mapBox">
+            <div id="up"></div>
+            <div id="map-container"></div> 
+          </div>
+        </div>
       </div>
       
       <div class="col-lg-3" style="height:400px; overflow-y:scroll;">
-	<table class="table table-striped table-hover ">
-	  <thead>
-	    <tr>
-	      <th></th>
-	      <th>Select a country</th>
-	    </tr>
-	  </thead>
-	  <tbody id="country-table-body">
-	  </tbody>
-	</table>
+        <table class="table table-striped table-hover ">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Select a country</th>
+            </tr>
+          </thead>
+          <tbody id="country-table-body">
+          </tbody>
+        </table>
       </div>
       
       <!-- Highchart -->
       <div class="col-lg-12">
-	<div id="chart-container" style="height:400px;"></div>
+        <div id="chart-container" style="height:400px;"></div>
       </div>
       
       <div class="col-lg-12" id="other-sites-container">
-	<h2>Other sites using the same IPs as this domain</h2>
-	<div class="col-lg-3">
-	  <table class="table table-striped table-hover ">
-	    <tbody id="domain-table-body-0">
-	    </tbody>
-	  </table>
-	</div>
-	<div class="col-lg-3">
-	  <table class="table table-striped table-hover ">
-	    <tbody id="domain-table-body-1">
-	    </tbody>
-	  </table>
-	</div>
-	<div class="col-lg-3">
-	  <table class="table table-striped table-hover ">
-	    <tbody id="domain-table-body-2">
-	    </tbody>
-	  </table>
-	</div>
-	<div class="col-lg-3">
-	  <table class="table table-striped table-hover ">
-	    <tbody id="domain-table-body-3">
-	    </tbody>
-	  </table>
-	</div>
+        <h2>Other sites using the same IPs as this domain</h2>
+        <div class="col-lg-3">
+          <table class="table table-striped table-hover ">
+            <tbody id="domain-table-body-0">
+            </tbody>
+          </table>
+        </div>
+        <div class="col-lg-3">
+          <table class="table table-striped table-hover ">
+            <tbody id="domain-table-body-1">
+            </tbody>
+          </table>
+        </div>
+        <div class="col-lg-3">
+          <table class="table table-striped table-hover ">
+            <tbody id="domain-table-body-2">
+            </tbody>
+          </table>
+        </div>
+        <div class="col-lg-3">
+          <table class="table table-striped table-hover ">
+            <tbody id="domain-table-body-3">
+            </tbody>
+          </table>
+        </div>
       </div>
 
       
@@ -166,8 +168,8 @@
         <div class="row">
           <div class="col-lg-12">
             <p>Maintained by the University of Washington CSE Networks Lab</p>
-	    <p>Surveillance icon in CensorWatch logo by <a href="https://thenounproject.com/Luis/">Luis Prado</a>, released under the <a href="https://creativecommons.org/licenses/by/3.0/us/">Creative Commons</a> license.</p>
-	    <p>Flatly Bootswatch theme by <a href="https://thomaspark.co/">Thomas Park</a>, released under the <a href="https://github.com/thomaspark/bootswatch/blob/gh-pages/LICENSE">MIT License</a>.</p>
+            <p>Surveillance icon in CensorWatch logo by <a href="https://thenounproject.com/Luis/">Luis Prado</a>, released under the <a href="https://creativecommons.org/licenses/by/3.0/us/">Creative Commons</a> license.</p>
+            <p>Flatly Bootswatch theme by <a href="https://thomaspark.co/">Thomas Park</a>, released under the <a href="https://github.com/thomaspark/bootswatch/blob/gh-pages/LICENSE">MIT License</a>.</p>
           </div>
         </div>
       </footer>
@@ -183,7 +185,7 @@
             <h4 class="modal-title">Permalink to this Page</h4>
           </div>
           <div class="modal-body">
-	    <form class="bs-component">
+            <form class="bs-component">
                 <div class="form-group">
                   <input class="form-control" id="modal-url" value="https://censor.watch/" type="text">
                 </div>
