@@ -118,7 +118,7 @@ app.get('/api/list_all_days', function(req, res) {
 app.get('/api/chart_for_domain/:domain', function(req, res) {
     var domain = req.params.domain;
     var country = req.query.country;
-    var filename = "cntry-cntry.json";
+    var filename = "country-country.json";
     var ret = [];
     var series = {};
     for (var i in DAYS) {
@@ -191,7 +191,7 @@ function resolvedCountrySumHelper(originData, timestamp, series) {
 
 // Fetch aggregate data for the total # of resolutions per-country (shown in tooltips)
 app.get('/api/total_resolution_stats/:date', function(req, res) {
-    var filename = "cntry-cntry.json";
+    var filename = "country-country.json";
     var date = req.params.date;
     var ret = {};
     if (date in FILES && filename in FILES[date]) {
@@ -236,7 +236,7 @@ app.get('/api/total_resolution_stats/:date', function(req, res) {
 app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
-    var filename = "cntry-cntry.json";
+    var filename = "country-country.json";
     if (date in FILES && filename in FILES[date]) {
         var data = FILES[date][filename];
         if (domain === 'all') {
@@ -275,7 +275,7 @@ app.get('/api/countries_by_domain/:domain/:date', function(req, res) {
 app.get('/api/list_all_domains/countries_by_domain/:date', function(req, res) {
     var domain = req.params.domain;
     var date = req.params.date;
-    var filename = "cntry-cntry.json";
+    var filename = "country-country.json";
     if (date in FILES && filename in FILES[date]) {
         var data = FILES[date][filename];
         var domainList = [];
