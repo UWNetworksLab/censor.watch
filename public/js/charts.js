@@ -212,8 +212,8 @@ function mapReady(reloadChart) {
 
     if (reloadChart) {
         // Fetch data for the current domain & country for the timeseries chart
-        $.get( "/api/chart_for_domain/" + CURR_DOMAIN + "?country=" + CURR_COUNTRY.toUpperCase(), function (data) {
-            chartChange(data);
+        $.get( "/api/chart_for_domain/" + CURR_DOMAIN + "?country=" + CURR_COUNTRY.toUpperCase(), function (res) {
+            chartChange(res);
         });
     }
 
@@ -254,7 +254,7 @@ function mapReady(reloadChart) {
             value = aggregated_data[countryUpper];
         }
         if (country === CURR_COUNTRY) {
-            CURR_COUNTRYVal = value;
+            currCountryVal = value;
         } else {
             data.push({
                 key: country,
@@ -323,8 +323,9 @@ function mapReady(reloadChart) {
                     res = DAILY_RESOLUTIONS[countryCodeCaps];
                 }
                 var domain_percent = Highcharts.numberFormat(res * 100 / TOTAL_RESOLUTIONS, 2);
+		var domain_rounded = Highcharts.numberFormat(res, 0);
                 var CURR_COUNTRYStr = (CURR_COUNTRY === '') ? 'All Countries' : COUNTRY_CODE_MAP[CURR_COUNTRY];
-                str += '<b>' + domain_percent + '%</b><br/>';
+                str += '<b>' + domain_percent + '%</b> (' + domain_rounded + ')<br/>';
                 
                 // Populate tooltip for all domains
                 var primary = 0;
