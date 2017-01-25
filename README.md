@@ -17,4 +17,4 @@ node server.js
 
 ## License
 
-TODO
+BSD 2-clause
